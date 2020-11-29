@@ -1,1 +1,31 @@
 Named Tensor
+
+<head>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</head>
+<body>
+
+\(
+\DeclareMathOperator*{\softmax}{softmax}
+\newcommand{\reals}[0]{\mathbb{R}}
+
+% Named tensor prelude
+\newcommand{\name}[1]{\mathsf{#1}}
+\makeatletter
+\newcommand{\names}[1]{%
+  \def\dolist##1{\expandafter\@dolist##1,\@eol}%
+  \def\@dolist##1,##2\@eol{%
+    \begingroup\setbox0=\hbox{##1\unskip}\ifdim\wd0=0pt\endgroup\else\endgroup\name{\ignorespaces##1\unskip}\fi%
+    \ifx\@eol##2\@eol\else\\\@dolist##2\@eol\fi}%
+  \substack{\dolist{#1}}%
+}
+\makeatother
+\newcommand{\ndot}[1]{\mathbin{\mathop{\odot}\displaylimits_{\names{#1}}}}
+\newcommand{\nsum}[1]{\mathbin{\mathop{\sum}\displaylimits_{\names{#1}}}}
+\newcommand{\ntup}[2]{\name{#1}:#2}
+\newcommand{\nfun}[2]{\underset{\names{#1}}{#2}}
+\)
+  
+</body>
