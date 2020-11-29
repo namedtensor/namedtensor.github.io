@@ -28,4 +28,13 @@ Named Tensor
 \newcommand{\nfun}[2]{\underset{\names{#1}}{#2}}
 \)
   
+  
+\(
+  \begin{align*} 
+Q &\in \reals^{\ntup{key}{d_v},\ntup{time'}{n}}\\
+K &\in \reals^{\ntup{head}{h},\ntup{key}{d_k}, \ntup{time}{n}}\\
+V &\in \reals^{\ntup{head}{h}, \ntup{val}{d_v}, \ntup{time}{n}}\\
+\text{attention}(Q, K, V) &=  \nfun{time}{\softmax} \left( \frac{Q \ndot{key} K }{\sqrt{d_k}} \right) \ndot{time} V 
+\end{align*}
+\)  
 </body>
