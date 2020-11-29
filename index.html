@@ -25,9 +25,27 @@
 \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
 \)
 
+  <header>
  <h1> Named Tensor Notation<h1>
-
-  
+   
+   </header>
+  <h2>Summary</h2>
+   Matrix notation is concise, but often not helpful for explaining 
+   new concepts. Readers often get confused aligning dimensions 
+   to concepts and resolving unnecessary transpositional ambiguities. 
+   This page provides some examples of <i>named tensor notation</i>, a proposal 
+   for writing tensor calculations. Named tensor notation is based on three ideas
+   1) unordered named dimensions, 2) broadcasting, and 3) named reduction syntax. 
+   All tensor dimensions must have an explicit name, and 
+   critically, all operations must use these name and are not use dimension-ordering conventions. 
+   This means matrix multiplication, transpose, and friends are gone entirely. Instead we write "matrix 
+   multiply" as a broadcasted multiply and a sum over the named dimension \( \ndot{dim} \). 
+   Names can also appear in sums, expectations, and parameterize arbitrary functions like softmax. 
+   
+   For the full formal specification of the notation see http://github.com/namedtensor/spec.  
+   
+   Here are some examples in action. 
+   
   <h2> Attention</h2>  
 \(
   \begin{align*} 
