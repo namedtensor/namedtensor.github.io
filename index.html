@@ -1,4 +1,3 @@
-Named Tensor
 
 <head>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -17,8 +16,11 @@ Named Tensor
 \newcommand{\ntup}[2]{\name{#1}:#2}
 \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
 \)
+
+ <h1> Named Tensor<h1>
+
   
-  
+  <h2> Attention</h2>  
 \(
   \begin{align*} 
 Q &\in \reals^{\ntup{key}{d_v},\ntup{time'}{n}}\\
@@ -27,4 +29,27 @@ V &\in \reals^{\ntup{head}{h}, \ntup{val}{d_v}, \ntup{time}{n}}\\
 \text{attention}(Q, K, V) &=  \nfun{time}{\softmax} \left( \frac{Q \ndot{key} K }{\sqrt{d_k}} \right) \ndot{time} V 
 \end{align*}
 \)  
+  
+  <h2>MLP</h2>
+  \(
+   \begin{align*} 
+V &\in \reals^{\ntup{output}{o}, \ntup{hidden}{h}},\ c\in \reals^{\ntup{output}{o}} \\
+W &\in \reals^{{\ntup{hidden}{h}, \ntup{in}{i}}}, \ b \in \reals^{\ntup{hidden}{h}} \\
+X &\in \reals^{{\ntup{batch}{b}, \ntup{in}{i}}} \\
+\text{MLP}(X; V, W,b, c) &= \sigma \left( V \ndot{hidden} \sigma \left( W \ndot{in} X + b \right) + c \right)  
+\end{align*}
+   \)
+
+<h2>NN Norms</h2>
+
+   \(
+   \begin{align*} 
+X &\in \reals^{{\ntup{batch}{b}, \ntup{channel}{c}, \ntup{hidden}{h}}}\\
+\gamma, \beta &\in \reals^{{\ntup{batch}{b}}} \\
+\text{batchnorm}(X; \gamma, \beta) &= \frac{X - \nfun{batch}{\mathbb{E}}[X]}{\sqrt{\nfun{batch}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta
+\end{align*}
+
+   \)
+   
+   
 </body>
