@@ -30,23 +30,21 @@
    
    </header>
   <h2>Summary</h2>
-   Matrix notation is concise, but often not helpful for explaining 
-   new concepts. Readers often get confused aligning dimensions 
-   to concepts and resolving unnecessary transpositional ambiguities. 
-   This page provides some examples of <i>named tensor notation</i>, a proposal 
-   for writing tensor calculations. Named tensor notation is based on three ideas
-   1) unordered named dimensions, 2) broadcasting, and 3) named reduction syntax. 
-   All tensor dimensions must have an explicit name, and 
-   critically, all operations must use these name and are not use dimension-ordering conventions. 
-   This means matrix multiplication, transpose, and friends are gone entirely. Instead we write "matrix 
-   multiply" as a broadcasted multiply and a sum over the named dimension \( \ndot{dim} \). 
+   Matrix notation is concise, but not helpful for explaining 
+   new ideas. Readers often get confused aligning dimensions 
+   to concepts and resolving transpositional ambiguities. 
+   <i>Named tensor notation</i> is a proposal 
+   for writing tensor calculations with 1) unordered dimensions, 2) named broadcasting, and 3) named reduction. 
+   All tensor dimensions must have an explicit name and cannot accessed by convention. 
+   This means no matrix multiplication or transpose at all. To perform a matrix 
+   dot, we do a broadcasted multiply and a sum over the named dimension \( \ndot{dim} \). 
    Names can also appear in sums, expectations, and parameterize arbitrary functions like softmax. 
    
+   <br> 
    For the full formal specification of the notation see http://github.com/namedtensor/spec.  
    
-   Here are some examples in action. 
-   
-  <h2> Attention</h2>  
+   <h2>Examples</h2>
+  <h3> Attention</h3>  
 \(
   \begin{align*} 
 Q &\in \reals^{\ntup{key}{d_v},\ntup{time'}{n}}\\
@@ -56,7 +54,7 @@ V &\in \reals^{\ntup{head}{h}, \ntup{val}{d_v}, \ntup{time}{n}}\\
 \end{align*}
 \)  
   
-  <h2>MLP</h2>
+  <h3>MLP</h3>
   \(
    \begin{align*} 
 V &\in \reals^{\ntup{output}{o}, \ntup{hidden}{h}},\ c\in \reals^{\ntup{output}{o}} \\
@@ -66,7 +64,7 @@ X &\in \reals^{{\ntup{batch}{b}, \ntup{in}{i}}} \\
 \end{align*}
    \)
 
-<h2>NN Norms</h2>
+<h3>NN Norms</h3>
 
    \(
    \begin{align*} 
