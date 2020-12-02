@@ -253,17 +253,17 @@ X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{in}:i}} \\
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
 \gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{batch}:b}} \\
-\text{batchnorm}(X; \gamma, \beta) &amp;= \frac{X - \mathop{\text{mean}}\displaylimits_{\mathsf{batch}}(X)}{\sqrt{\mathop{\text{var}}\displaylimits_{\mathsf{batch}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
+\text{batchnorm}(X; \gamma, \beta) &amp;= \frac{\displaystyle  X - \mathop{\text{mean}}\displaylimits_{\mathsf{batch}}(X)}{\displaystyle \sqrt{\mathop{\text{var}}\displaylimits_{\mathsf{batch}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
 <h3 id="instance-norm" class="unnumbered">Instance Norm</h3>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
 \gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{hidden}:h}} \\
-\text{instancenorm}(X; \gamma, \beta) &amp;= \frac{X - \mathop{\text{\text{mean}}}\displaylimits_{\mathsf{hidden}}(X)}{\sqrt{\mathop{\text{\text{var}}}\displaylimits_{\mathsf{hidden}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
+\text{instancenorm}(X; \gamma, \beta) &amp;= \frac{\displaystyle  X - \mathop{\text{mean}}\displaylimits_{\mathsf{hidden}}(X)}{\displaystyle  \sqrt{\mathop{\text{var}}\displaylimits_{\mathsf{hidden}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
 <h3 id="layer-norm" class="unnumbered">Layer Norm</h3>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}} \\
 \gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{hidden}:h}} \\
-\text{layernorm}(X; \gamma, \beta) &amp;= \frac{X - \mathop{\text{\text{mean}}}\displaylimits_{\mathsf{hidden,channel}}(X)}{\sqrt{\mathop{\text{\text{var}}}\displaylimits_{\mathsf{hidden, channel}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
+\text{layernorm}(X; \gamma, \beta) &amp;= \frac{\displaystyle X - \mathop{\text{mean}}\displaylimits_{\mathsf{hidden,channel}}(X)}{ \displaystyle  \sqrt{\mathop{\text{var}}\displaylimits_{\mathsf{hidden, channel}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
 <h2 id="continuous-bag-of-words">Continuous Bag of Words</h2>
 <p>A continuous bag-of-words model classifies by summing up the embeddings of a sequence of words and then projecting them to the space of classes.</p>
 <p><span class="math display">\[\begin{aligned}
