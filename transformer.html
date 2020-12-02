@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Named Tensor - Transformer</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://vanillacss.com/vanilla.css">
+      <style>
+          body{margin:0 auto;max-width:50rem;}
+          @media(max-width:50rem) {
+              body {
+                  padding: 10px;
+              }
+          }
+      </style>
+  
+    <meta charset="utf-8" />
+    <meta name="generator" content="pandoc" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="David Chiang and Sasha Rush" />
+    <title>Named Tensor Notation</title>
+    <style type="text/css">
+        code{white-space: pre-wrap;}
+        span.smallcaps{font-variant: small-caps;}
+        span.underline{text-decoration: underline;}
+        div.column{display: inline-block; vertical-align: top; width: 50%;}
+    </style>
+    <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  
+  \(
+    \require{ams}
+  \DeclareMathOperator*{\softmax}{softmax}
+  \newcommand{\reals}[0]{\mathbb{R}}
+  \newcommand{\name}[1]{\mathsf{#1}}
+  \newcommand{\ndot}[1]{\mathbin{\mathop{\odot}_{\name{#1}}}}
+  \newcommand{\nsum}[1]{\mathbin{\mathop{\sum}_{\name{#1}}}}
+  \newcommand{\ntup}[2]{\name{#1}:#2}
+  \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
+  \newcommand{\displaylimits}{}
+  \newcommand{\intertext}[1]{}
+  \newcommand{\nndot}[2]{\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\name{#1}|\name{#2}}}}
+  
+  \DeclareMathOperator*{\softmax}{softmax}
+  
+  \newcommand{\tuple}[1]{\{ #1\}}
+  \DeclareMathOperator{\tupledom}{dom}
+  \DeclareMathOperator{\tupleshape}{ind}
+  \newcommand{\tupleproj}[2]{#1.#2}
+  \newcommand{\tuplerestrict}[2]{\left.#1\right|_{#2}}
+  
+  \newcommand{\dmodel}{d_{\text{model}}}
+  
+  \)
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Named Tensor - Transformer</h1>
+</header>
+<h4 id="ffn">FFN</h4>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{\mathsf{emb}:d_{\text{model}}} \\
+W^1 &amp;\in \mathbb{R}^{\mathsf{emb}:d_{\text{model}}, \mathsf{hid}:d_{\text{ff}}}, 
+b^1 \in \mathbb{R}^{\mathsf{hid}:d_{\text{ff}}} \\
+W^2 &amp; \in \mathbb{R}^{ \mathsf{hid}:d_{\text{ff}}, \mathsf{emb}:d_{\text{model}}}, b^2 \in \mathbb{R}^{\mathsf{hid}:d_{\text{ff}}} \\
+\text{FFN}(X; W, b) &amp;=  W^2 \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{hid}}} \text{ReLU}(W^1 \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X + b^1) + b^2\end{aligned}\]</span></p>
+<h4 id="masked-attention">Masked Attention</h4>
+<p><span class="math display">\[\begin{aligned}
+Q &amp;\in \mathbb{R}^{\mathsf{key}, \mathsf{time&#39;}},  K \in \mathbb{R}^{\mathsf{key}, \mathsf{time}}\\
+V &amp;\in \mathbb{R}^{\mathsf{time}, \mathsf{val}},
+M \in \mathbb{R}^{\mathsf{time}, \mathsf{time&#39;}}\\
+\text{att}(Q, K, V, M) &amp;=  V \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{time}}} \underset{\mathsf{time}}{\softmax} \left( \frac{\displaystyle Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{key}}} K }{\sqrt{d_k}} + M\right) \end{aligned}\]</span></p>
+<h4 id="multiheaded-self-attention">Multiheaded Self Attention</h4>
+<p><span class="math display">\[\begin{aligned}
+ W^Q &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+  W^K &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+   W^V &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{val}:d_k} \\
+  W^O &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{val}:d_k, \mathsf{emb}:d_{\text{model}}} \\
+  X &amp;\in \mathbb{R}^{\mathsf{time}:n, \mathsf{emb}:d_{\text{model}}} \\
+  \text{MHA}(X; W) &amp;= \left[W^O \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{head,val}}} \text{att}(Q, K, V, M) \right]_{\mathsf{time&#39;} \rightarrow \mathsf{time}} \\
+  Q &amp;= W^Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} \left[X\right]_{\mathsf{time}\rightarrow\mathsf{time&#39;}} \\
+  K &amp;= W^K \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X \\
+  V &amp;= W^V \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X \\
+ M_{\mathsf{time&#39;}:i, \mathsf{time}:j} &amp;= \begin{cases} 0 &amp; j\leq i \\ -\infty &amp; ow \end{cases}   \end{aligned}\]</span></p>
+<h4 id="layer-norm">Layer Norm</h4>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{{ \mathsf{emb}:d_{\text{model}}}} \ \  \gamma, \beta \in \mathbb{R}^{{ \mathsf{emb}:d_{\text{model}}}} \\
+\text{lnorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{emb}}{\text{mean}}[X]}{\sqrt{\underset{\mathsf{emb}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
+<h4 id="position-encoding">Position Encoding</h4>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \{0, 1\}^{{\mathsf{time}:n, \mathsf{vocab}:b}}, \mathbin{\mathop{\sum}\displaylimits_{\mathsf{vocab}}} X = 1\\
+E &amp;\in \mathbb{R}^{{\mathsf{vocab*}:v, \mathsf{emb}:d_{\text{model}}}} \\
+\text{embed}(X; E) &amp;= (E \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{vocab}}} X)\sqrt{d_{\text{model}}} + P \\
+P &amp;\in \mathbb{R}^{{\mathsf{time}:n, \mathsf{hidden}:d_{\text{model}}}} \\
+P_{\mathsf{hidden}:i, \mathsf{time}:p} &amp; = \begin{cases} \sin(p / 10000^{i / d_{\text{model}}}) &amp; \text{$i$ even} \\ 
+                                                     \cos(p / 10000^{(i - 1) / d_{\text{model}}}) &amp; \text{$i$ odd} \\                                        \end{cases} \\\end{aligned}\]</span></p>
+<h4 id="transformer">Transformer</h4>
+<p><span class="math display">\[\begin{aligned}
+I &amp;\in \{0, 1\}^{{\mathsf{time}:t, \mathsf{vocab}:b}}, \mathbin{\mathop{\sum}\displaylimits_{\mathsf{vocab}}} X = 1\\
+X^0 &amp;= \text{embed}(I)\\
+T^1 &amp;= \text{lnorm}(\text{MHA}(X^0)) + X^0\\
+X^1 &amp;= \text{lnorm}(\text{FFN}(T^1)) + T^1\\
+\ldots \\
+T^{L} &amp;= \text{lnorm}(\text{MHA}(X^{L-1})) + X^{L-1}\\
+X^{L} &amp;= \text{lnorm}(\text{FFN}(T^L)) + T^L\\
+O &amp;= \underset{\mathsf{vocab}}{\text{softmax}}(W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X^L)\end{aligned}\]</span></p>
+</body>
+</html>

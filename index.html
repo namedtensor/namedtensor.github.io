@@ -1,80 +1,481 @@
-
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <link rel="stylesheet" href="https://vanillacss.com/vanilla.css">
-    <style>
-        body{margin:0 auto;max-width:50rem;}
-        @media(max-width:50rem) {
-            body {
-                padding: 10px;
-            }
-        }
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="David Chiang and Sasha Rush" />
+  <title>Named Tensor Notation</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://vanillacss.com/vanilla.css">
+      <style>
+          body{margin:0 auto;max-width:50rem;}
+          @media(max-width:50rem) {
+              body {
+                  padding: 10px;
+              }
+          }
+      </style>
+  
+    <meta charset="utf-8" />
+    <meta name="generator" content="pandoc" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="David Chiang and Sasha Rush" />
+    <title>Named Tensor Notation</title>
+    <style type="text/css">
+        code{white-space: pre-wrap;}
+        span.smallcaps{font-variant: small-caps;}
+        span.underline{text-decoration: underline;}
+        div.column{display: inline-block; vertical-align: top; width: 50%;}
     </style>
+    <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  
+  \(
+    \require{ams}
+  \DeclareMathOperator*{\softmax}{softmax}
+  \newcommand{\reals}[0]{\mathbb{R}}
+  \newcommand{\name}[1]{\mathsf{#1}}
+  \newcommand{\ndot}[1]{\mathbin{\mathop{\odot}_{\name{#1}}}}
+  \newcommand{\nsum}[1]{\mathbin{\mathop{\sum}_{\name{#1}}}}
+  \newcommand{\ntup}[2]{\name{#1}:#2}
+  \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
+  \newcommand{\displaylimits}{}
+  \newcommand{\intertext}[1]{}
+  \newcommand{\nndot}[2]{\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\name{#1}|\name{#2}}}}
+  
+  \DeclareMathOperator*{\softmax}{softmax}
+  
+  \newcommand{\tuple}[1]{\{ #1\}}
+  \DeclareMathOperator{\tupledom}{dom}
+  \DeclareMathOperator{\tupleshape}{ind}
+  \newcommand{\tupleproj}[2]{#1.#2}
+  \newcommand{\tuplerestrict}[2]{\left.#1\right|_{#2}}
+  
+  \newcommand{\dmodel}{d_{\text{model}}}
+  
+  \)
 </head>
 <body>
-<div id="top" class="page" role="document">
-\(
-  \require{ams}
-\DeclareMathOperator*{\softmax}{softmax}
-\newcommand{\reals}[0]{\mathbb{R}}
-\newcommand{\name}[1]{\mathsf{#1}}
-\newcommand{\ndot}[1]{\mathbin{\mathop{\odot}_{\name{#1}}}}
-\newcommand{\nsum}[1]{\mathbin{\mathop{\sum}_{\name{#1}}}}
-\newcommand{\ntup}[2]{\name{#1}:#2}
-\newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
-\)
+<header id="title-block-header">
+<h1 class="title">Named Tensor Notation</h1>
+<p class="author">David Chiang and Sasha Rush</p>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#sec:intro">Informal Overview</a></li>
+<li><a href="#sec:examples">Examples</a></li>
+<li><a href="#sec:definitions">Formal Definitions</a></li>
+<li><a href="#sec:duality">Duality</a></li>
+</ul>
+</nav>
+<h1 id="introduction">Introduction</h1>
+<p>Most papers about neural networks use the notation of vectors and matrices from applied linear algebra. This notation works very well when talking about vector spaces, linear transformations between vector spaces, and measuring distances in vector spaces, but when working with neural networks, we quickly run up against limitations of this notation.</p>
+<p>Consider the following equation <span class="citation" data-cites="vaswani+:2017">(Vaswani et al. 2017)</span>: <span class="math display">\[\text{Attention}(Q, K, V) = \softmax \left( \frac{QK^\top}{\sqrt{d_k}} \right) V.\]</span> where <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span>, and <span class="math inline">\(V\)</span> are sequences of query, key, and value vectors packed into matrices. Does the product <span class="math inline">\(QK^\top\)</span> sum over the sequence, or over the query/key vectors? We would need to know the sizes of <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span>, and <span class="math inline">\(V\)</span> to know that it’s taken over the query/key vectors. Is the softmax taken over rows or columns? The standard notation does not even offer a way to answer this question. With multiple attention heads, the notation becomes more complicated and leaves more questions unanswered. With multiple sentences in a minibatch, the notation becomes more complicated still, and most papers wisely leave this detail out.</p>
+<p>Libraries for programming with neural networks <span class="citation" data-cites="numpy pytorch">(Harris et al. 2020; Paszke et al. 2019)</span> provide multidimensional arrays, called tensors (although usually without the theory associated with tensors in linear algebra and physics), and a rich array of operations on tensors. These libraries have limitations of their own, however, because they inherit from mathematical notation the convention of identifying indices by position. Quite a few libraries have been developed to identify indices by <em>name</em> instead: Nexus <span class="citation" data-cites="chen2017typesafe">(Chen 2017)</span>, tsalib <span class="citation" data-cites="tsalib">(Sinha 2018)</span>, NamedTensor <span class="citation" data-cites="namedtensor">(Rush 2019)</span>, named tensors in PyTorch <span class="citation" data-cites="named-tensors">(Torch Contributors 2019)</span>, and Dex <span class="citation" data-cites="maclaurin+:2019">(Maclaurin et al. 2019)</span>. (Some of these libraries also add types to indices, but here we are only interested in adding names.)</p>
+<p>Back in the realm of mathematical notation, then, we need to improve notation in two ways: first, the flexibility of working with multidimensional arrays, and second, the perspicuity of identifying indices by name instead of by position. This document describes our proposal to do both.</p>
+<p>As a preview, the above equation becomes <span class="math display">\[\text{Attention}(Q,K,V) = \softmax_{\mathsf{time}} \left( \frac{Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{key}}} K}{\sqrt{d_k}} \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{time}}} V.\]</span></p>
+<p>The source code for this document can be found at <a href="https://github.com/namedtensor/notation/">https://github.com/namedtensor/notation/</a>. We invite anyone to make comments on this proposal by submitting issues or pull requests on this repository.</p>
+<h1 id="sec:intro">Informal Overview</h1>
+<p>Let’s think first about the usual notions of vectors, matrices, and tensors, without named indices.</p>
+<p>Define <span class="math inline">\([n] = \{1, \ldots, n\}\)</span>. We can think of a size-<span class="math inline">\(n\)</span> real vector <span class="math inline">\(v\)</span> as a function from <span class="math inline">\([n]\)</span> to <span class="math inline">\(\mathbb{R}\)</span>. We get the <span class="math inline">\(i\)</span>th element of <span class="math inline">\(v\)</span> by applying <span class="math inline">\(v\)</span> to <span class="math inline">\(i\)</span>, but we normally write this as <span class="math inline">\(v_i\)</span> (instead of <span class="math inline">\(v(i)\)</span>).</p>
+<p>Similarly, we can think of an <span class="math inline">\(m \times n\)</span> real matrix as a function from <span class="math inline">\([m] \times [n]\)</span> to <span class="math inline">\(\mathbb{R}\)</span>, and an <span class="math inline">\(l \times m \times n\)</span> real tensor as a function from <span class="math inline">\([l] \times [m] \times [n]\)</span> to <span class="math inline">\(\mathbb{R}\)</span>. In general, then, real tensors are functions from <em>tuples of natural numbers</em> to reals.</p>
+<h2 id="named-tensors">Named tensors</h2>
+<p>A <em>named tuple</em> (also known as a <em>record</em>) looks like this: <span class="math display">\[\{ \mathsf{foo}: 2, \mathsf{bar}: 3\}.\]</span> The order of the elements doesn’t matter: <span class="math display">\[\{ \mathsf{foo}: 2, \mathsf{bar}: 3\} = \{ \mathsf{bar}: 3, \mathsf{foo}: 2\}.\]</span> We use <span class="sans-serif">sans-serif</span> for names.</p>
+<p>Then, a real <em>named tensor</em> is a function from named tuples to reals. Each of its indices has a name, and the ordering of the indices doesn’t matter. For example, here is a tensor with an index named <span class="math inline">\(\mathsf{foo}\)</span> ranging from 1 to 2 and an index named <span class="math inline">\(\mathsf{bar}\)</span> ranging from 1 to 3. More succinctly, we say that the <em>shape</em> of <span class="math inline">\(A\)</span> is <span class="math inline">\(\{ \mathsf{foo}:2, \mathsf{bar}:3\}\)</span>. <span class="math display">\[A = 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  3 &amp; 1 &amp; 4 \\
+  1 &amp; 5 &amp; 9
+ \end{bmatrix}} 
+.\]</span></p>
+<p>We use uppercase italic letters for variables standing for named tensors. We don’t mind if you use another convention, but urge you not to use different styles for tensors and their elements. For example, if <span class="math inline">\(\mathbf{A}\)</span> is a tensor, then an element of <span class="math inline">\(\mathbf{A}\)</span> is written as <span class="math inline">\(\mathbf{A}_{\mathsf{foo}:2, \mathsf{bar}:3}\)</span> – not <span class="math inline">\(A_{\mathsf{foo}:2,\mathsf{bar}:3}\)</span> or <span class="math inline">\(a_{\mathsf{foo}:2,\mathsf{bar}:3}\)</span>.</p>
+<p>Just as the set of all size-<span class="math inline">\(n\)</span> real vectors is written <span class="math inline">\(\mathbb{R}^n\)</span>, and the set of all <span class="math inline">\(m\times n\)</span> real matrices is often written <span class="math inline">\(\mathbb{R}^{m \times n}\)</span> (which makes sense because one sometimes writes <span class="math inline">\(Y^X\)</span> for the set of all functions from <span class="math inline">\(X\)</span> to <span class="math inline">\(Y\)</span>), we write <span class="math inline">\(\mathbb{R}^{\mathsf{foo}: 2, \mathsf{bar}: 3}\)</span> for the set of all tensors with shape <span class="math inline">\(\{ \mathsf{foo}:2, \mathsf{bar}:3\}\)</span>.</p>
+<p>We access elements of <span class="math inline">\(A\)</span> using subscripts: <span class="math inline">\(A_{\mathsf{foo}: 1, \mathsf{bar}: 3} = A_{\mathsf{bar}: 3, \mathsf{foo}: 1} = 4\)</span>. We also allow partial indexing: <span class="math display">\[\begin{aligned}
+A_{\mathsf{foo}:1} &amp;= 
+ \stackrel{\large \mathsf{bar}}{ \begin{bmatrix} 
+  3 &amp; 1 &amp; 4
+ \end{bmatrix}} 
 
-  <header>
- <h1> Named Tensor Notation<h1>
-   
-
-  <h2>Summary</h2>
-   Matrix notation is concise, but not helpful for explaining 
-   new ideas. Readers often get confused aligning dimensions 
-   to concepts and resolving transpositional ambiguities. 
-   <i>Named tensor notation</i> is a proposal 
-   for writing tensor calculations with 1) unordered dimensions, 2) named broadcasting, and 3) named reduction. 
-   All tensor dimensions must have an explicit name and cannot accessed by convention. 
-   This means no matrix multiplication or transpose at all. To perform a matrix 
-   dot, we do a broadcasted multiply and a sum over the named dimension \( \ndot{dim} \). 
-   Names can also appear in sums, expectations, and parameterize arbitrary functions like softmax. 
-   
-   <br> <br>
-   Formal <a href="http://github.com/namedtensor/spec">specification</a> of the notation.  
-      </header>
-   
-   <h2>Examples</h2>
-  <h3> Attention</h3>  
-\(
-  \begin{align*} 
-Q &\in \reals^{\ntup{key}{d_v},\ntup{time'}{n}}\\
-K &\in \reals^{\ntup{head}{h},\ntup{key}{d_k}, \ntup{time}{n}}\\
-V &\in \reals^{\ntup{head}{h}, \ntup{val}{d_v}, \ntup{time}{n}}\\
-\text{attention}(Q, K, V) &=  \nfun{time}{\softmax} \left( \frac{Q \ndot{key} K }{\sqrt{d_k}} \right) \ndot{time} V 
-\end{align*}
-\)  
-  
-  <h3>MLP</h3>
-  \(
-   \begin{align*} 
-V &\in \reals^{\ntup{output}{o}, \ntup{hidden}{h}},\ c\in \reals^{\ntup{output}{o}} \\
-W &\in \reals^{{\ntup{hidden}{h}, \ntup{in}{i}}}, \ b \in \reals^{\ntup{hidden}{h}} \\
-X &\in \reals^{{\ntup{batch}{b}, \ntup{in}{i}}} \\
-\text{MLP}(X; V, W,b, c) &= \sigma \left( V \ndot{hidden} \sigma \left( W \ndot{in} X + b \right) + c \right)  
-\end{align*}
-   \)
-
-<h3>NN Norms</h3>
-
-   \(
-   \begin{align*} 
-X &\in \reals^{{\ntup{batch}{b}, \ntup{channel}{c}, \ntup{hidden}{h}}}\\
-\gamma, \beta &\in \reals^{{\ntup{batch}{b}}} \\
-\text{batchnorm}(X; \gamma, \beta) &= \frac{X - \nfun{batch}{\mathbb{E}}[X]}{\sqrt{\nfun{batch}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta
-\end{align*}
-
-   \)
-   </div>
-   
+\\
+A_{\mathsf{bar}:3} &amp;= 
+ \stackrel{\large \mathsf{foo}}{ \begin{bmatrix} 
+  4 &amp; 9
+ \end{bmatrix}} 
+.\end{aligned}\]</span></p>
+<h2 id="elementwise-operations">Elementwise operations</h2>
+<p>Any function from scalars to scalars can be applied elementwise to a named tensor: <span class="math display">\[\exp A = 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  \exp 3 &amp; \exp 1 &amp; \exp 4 \\
+  \exp 1 &amp; \exp 5 &amp; \exp 9
+ \end{bmatrix}} 
+.\]</span> More elementwise unary operations: <span class="math display">\[\begin{array}{cl}
+kA &amp; \text{scalar multiplication by $k$} \\
+-A &amp; \text{elementwise negation} \\
+\exp A &amp; \text{elementwise $\exp$} \\
+\tanh A &amp; \text{elementwise $\tanh$}
+\end{array}\]</span></p>
+<p>Any function or operator that takes two scalar arguments can be applied elementwise to two named tensors with the same shape. If <span class="math inline">\(A\)</span> is as above and <span class="math display">\[\begin{aligned}
+B &amp;= 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  2 &amp; 7 &amp; 1 \\
+  8 &amp; 2 &amp; 8
+ \end{bmatrix}} 
+ \\
+\intertext{then}
+A + B &amp;= 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  3+2 &amp; 1+7 &amp; 4+1 \\
+  1+8 &amp; 5+2 &amp; 9+8
+ \end{bmatrix}} 
+.\end{aligned}\]</span></p>
+<p>But things get more complicated when <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> don’t have the same shape. If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> each have an index with the same name (and size), the two indices are <em>aligned</em>, as above. But if <span class="math inline">\(A\)</span> has an index named <span class="math inline">\(\mathsf{i}\)</span> and <span class="math inline">\(B\)</span> doesn’t, then we do <em>broadcasting</em>, which means effectively that we replace <span class="math inline">\(B\)</span> with a new tensor <span class="math inline">\(B&#39;\)</span> that contains a copy of <span class="math inline">\(B\)</span> for every value of index <span class="math inline">\(\mathsf{i}\)</span>. <span class="math display">\[\begin{aligned}
+A + 1 &amp;= 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  3+1 &amp; 1+1 &amp; 4+1 \\
+  1+1 &amp; 5+1 &amp; 9+1
+ \end{bmatrix}} 
+ \\
+A + B_{\mathsf{foo:1}} &amp;= 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  3+2 &amp; 1+7 &amp; 4+1 \\
+  1+2 &amp; 5+7 &amp; 9+1
+ \end{bmatrix}} 
+ \\
+A + B_{\mathsf{bar:3}} &amp;= 
+ \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+  3+1 &amp; 1+1 &amp; 4+1 \\
+  1+8 &amp; 5+8 &amp; 9+8
+ \end{bmatrix}} 
+.\end{aligned}\]</span> Similarly, if <span class="math inline">\(B\)</span> has an index named <span class="math inline">\(\mathsf{i}\)</span> and <span class="math inline">\(A\)</span> doesn’t, then we effectively replace <span class="math inline">\(A\)</span> with a new tensor <span class="math inline">\(A&#39;\)</span> that contains a copy of <span class="math inline">\(A\)</span> for every value of index <span class="math inline">\(\mathsf{i}\)</span>. If you’ve programmed with NumPy or any of its derivatives, this should be unsurprising to you.</p>
+<p>More elementwise binary operations: <span class="math display">\[\begin{array}{cl}
+A+B &amp; \text{elementwise addition} \\
+A-B &amp; \text{elementwise subtraction} \\
+A\odot B &amp; \text{elementwise (Hadamard) product} \\
+\max \{A, B\} &amp; \text{elementwise maximum} \\
+\min \{A, B\} &amp; \text{elementwise minimum}
+\end{array}\]</span></p>
+<h2 id="sec:reductions">Reductions</h2>
+<p>The same rules for alignment and broadcasting apply to functions that take tensor as arguments or return tensors. The gory details are in §<a href="#sec:tensorfunctions" data-reference-type="ref" data-reference="sec:tensorfunctions">4.3</a>, but we present the most important subcases here. The first is <em>reductions</em>, which are functions from vectors to scalars. Unlike with functions on scalars, we always have to specify which index these functions apply to, using a subscript. (This is equivalent to the <code>axis</code> argument that most NumPy reductions take.)</p>
+<p>For example, using the same example tensor <span class="math inline">\(A\)</span> from above, <span class="math display">\[\begin{aligned}
+\sum_{\mathsf{foo}} A &amp;= 
+ \stackrel{\large \mathsf{bar}}{ \begin{bmatrix} 
+  3+1 &amp; 1+5 &amp; 4+9
+ \end{bmatrix}} 
+ \\
+\sum_{\mathsf{bar}} A &amp;= 
+ \stackrel{\large \mathsf{foo}}{ \begin{bmatrix} 
+  3+1+4 &amp; 1+5+9
+ \end{bmatrix}} 
+.\end{aligned}\]</span> More reductions: If <span class="math inline">\(A\)</span> has shape <span class="math inline">\(\{ \mathsf{i}:X, \ldots\}\)</span>, then <span class="math display">\[\begin{aligned}
+  \sum_{\mathsf{i}} A &amp;= \sum_{x \in X} A_{\mathsf{i}: x} \\
+  \|A\|_{\mathsf{i}} &amp;= \sqrt{\sum_{\mathsf{i}} A^2} \\
+  \min_{\mathsf{i}} A &amp;= \min_{x \in X} A_{\mathsf{i}: x} \\
+  \max_{\mathsf{i}} A &amp;= \max_{x \in X} A_{\mathsf{i}: x} \\
+  \mathop{\text{mean}}\displaylimits_{\mathsf{i}}A &amp;= \frac{A}{\sum_{\mathsf{i}} A} \\
+  \mathop{\text{var}}\displaylimits_{\mathsf{i}} A &amp;= \|A - \mathop{\text{mean}}\displaylimits_{\mathsf{i}}A \|_{\mathsf{i}}^2\end{aligned}\]</span> (Note that <span class="math inline">\(\max\)</span> and <span class="math inline">\(\min\)</span> are overloaded; with multiple arguments and no subscript, they are elementwise, and with a single argument and a subscript, they are reductions.)</p>
+<p>You can also write multiple names to perform the reduction over multiple indices at once.</p>
+<h2 id="sec:tensorvalued">More functions</h2>
+<p>A very common example of a function from vectors to vectors is the softmax: <span class="math display">\[\softmax_{\mathsf{i}} A = \frac{\exp A}{\sum_{\mathsf{i}} \exp A}\]</span></p>
+<p>And it’s also very handy to have a function that renames an index: <span class="math display">\[_{\mathsf{bar}\rightarrow\mathsf{baz}} = 
+ \stackrel{\large \mathsf{baz}}{\mathsf{foo} \begin{bmatrix} 
+  3 &amp; 1 &amp; 4 \\
+  1 &amp; 5 &amp; 9
+ \end{bmatrix}}\]</span></p>
+<p>The vector dot product (inner product) is a function from two vectors to a scalar, which generalizes to named tensors to give the ubiquitous <em>contraction</em> operator: <span class="math display">\[\begin{aligned}
+  A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B &amp;= \sum_{\mathsf{i}} A \odot B.\end{aligned}\]</span> This operator can also be used for matrix-vector or matrix-matrix multiplication: <span class="math display">\[\begin{aligned}
+C &amp;= 
+ \stackrel{\large \mathsf{baz}}{\mathsf{bar} \begin{bmatrix} 
+  1 &amp; -1 \\ 2 &amp; -2 \\ 3 &amp; -3
+ \end{bmatrix}} 
+ \\
+A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{bar}}} C &amp;= 
+ \stackrel{\large \mathsf{baz}}{\mathsf{foo} \begin{bmatrix} 
+  17 &amp; -17 \\
+  53 &amp; -53
+ \end{bmatrix}} \end{aligned}\]</span> However, note that (like vector dot-product, but unlike matrix multiplication) <span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> is commutative, but not associative! Specifically, if <span class="math display">\[\begin{aligned}
+A &amp;\in \mathbb{R}^{\mathsf{i}:m} \\
+B &amp;\in \mathbb{R}^{\mathsf{i}:m,\mathsf{j}:n} \\
+C &amp;\in \mathbb{R}^{\mathsf{i}:m,\mathsf{j}:n}\end{aligned}\]</span> then <span class="math inline">\((A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{j}}} C\)</span> and <span class="math inline">\(A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} (B \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{j}}} C)\)</span> don’t even have the same shape.</p>
+<p>Finally, we briefly consider functions on matrices, for which you have to give <em>two</em> index names (and the order in general matters). Let <span class="math inline">\(A\)</span> be a named tensor with shape <span class="math inline">\(\{\mathsf{i}:2,\mathsf{j}:2,\mathsf{k}:2\}\)</span>: <span class="math display">\[\begin{aligned}
+A_{\mathsf{i}:1} &amp;= 
+ \stackrel{\large \mathsf{k}}{\mathsf{j} \begin{bmatrix} 
+  1 &amp; 2 \\
+  3 &amp; 4
+ \end{bmatrix}} 
+ \\
+A_{\mathsf{i}:2} &amp;= 
+ \stackrel{\large \mathsf{k}}{\mathsf{j} \begin{bmatrix} 
+  5 &amp; 6 \\
+  7 &amp; 8
+ \end{bmatrix}} 
+ \\
+\det_{\mathsf{j},\mathsf{k}} A &amp;= 
+ \stackrel{\large \mathsf{i}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 2 \\ 3 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 6 \\ 7 &amp; 8 \end{bmatrix} \end{bmatrix}} 
+ \\
+\det_{\mathsf{k},\mathsf{j}} A &amp;= 
+ \stackrel{\large \mathsf{i}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 2 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 7 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix}} 
+ \\
+\det_{\mathsf{i},\mathsf{j}} A &amp;= 
+ \stackrel{\large \mathsf{k}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 5 &amp; 7 \end{bmatrix} &amp; \det \begin{bmatrix} 2 &amp; 4 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix}} \end{aligned}\]</span> For matrix inverses, there’s no easy way to put a subscript under <span class="math inline">\(\mathord\cdot^{-1}\)</span>, so we recommend writing <span class="math inline">\(\mathop{\text{inv}}\displaylimits_{\mathsf{i},\mathsf{j}}\)</span>.</p>
+<h1 id="sec:examples">Examples</h1>
+<h2 id="attention">Attention</h2>
+<p>Let <span class="math inline">\(d_k\)</span> and <span class="math inline">\(d_v\)</span> be positive integers, and let <span class="math inline">\(n\)</span> and <span class="math inline">\(n&#39;\)</span> be the input and output sequence length. Define a function <span class="math display">\[\begin{aligned}
+  \text{Att} &amp;\colon \mathbb{R}^{\mathsf{time&#39;}:n&#39;,\mathsf{key}:d_k} \times \mathbb{R}^{\mathsf{time}:n,\mathsf{key}:d_k} \times \mathbb{R}^{\mathsf{time}:n,\mathsf{val}:d_v} \rightarrow \mathbb{R}^{\mathsf{time&#39;}:n&#39;,\mathsf{val}:d_v} \\
+  \text{Att}(Q,K,V) &amp;= \softmax_{\mathsf{time}} \left( \frac{Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{key}}} K}{\sqrt{d_k}} \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{time}}} V\end{aligned}\]</span></p>
+<p>In self-attention, <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span>, and <span class="math inline">\(V\)</span> are all computed from the same sequence. Let <span class="math inline">\(d_{\text{model}}\)</span> be a positive integer. The parameters are: <span class="math display">\[\begin{aligned}
+  W^Q &amp;\in \mathbb{R}^{\mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+  W^K &amp;\in \mathbb{R}^{\mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+  W^V &amp;\in \mathbb{R}^{\mathsf{emb}:d_{\text{model}}, \mathsf{val}:d_v} \\
+  W^O &amp;\in \mathbb{R}^{\mathsf{val}:d_v, \mathsf{emb}:d_{\text{model}}} \\
+\intertext{Then define}
+  \text{SelfAtt} &amp;\colon \mathbb{R}^{\mathsf{time}:n,\mathsf{emb}:d_{\text{model}}} \rightarrow \mathbb{R}^{\mathsf{time}:n,\mathsf{emb}:d_{\text{model}}} \\
+  \text{SelfAtt}(X; W^Q, W^K, W^V, W^O) &amp;= W^O \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{val}}} \left[\text{Att}(Q, K, V)\right]_{\mathsf{time&#39;}\rightarrow\mathsf{time}} \\
+\intertext{where}
+  Q &amp;= W^Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} \left[X\right]_{\mathsf{time}\rightarrow\mathsf{time&#39;}} \\
+  K &amp;= W^K \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X \\
+  V &amp;= W^V \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} X.\end{aligned}\]</span></p>
+<p>To change this to multi-head self-attention with <span class="math inline">\(h\)</span> attention heads, simply redefine <span class="math display">\[\begin{aligned}
+  W^Q &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+  W^K &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{key}:d_k} \\
+  W^V &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{emb}:d_{\text{model}}, \mathsf{val}:d_v} \\
+  W^O &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{val}:d_v, \mathsf{emb}:d_{\text{model}}}\end{aligned}\]</span> and define <span class="math display">\[\begin{aligned}
+\text{MultiSelfAtt} &amp;\colon \mathbb{R}^{\mathsf{time}:n,\mathsf{emb}:d_{\text{model}}} \rightarrow \mathbb{R}^{\mathsf{time}:n,\mathsf{emb}:d_{\text{model}}} \\
+\text{MultiSelfAtt}(X; W^Q, W^K, W^V, W^O) &amp;= \sum_{\mathsf{head}} \text{SelfAtt}(X; W^Q, W^K, W^V, W^O).\end{aligned}\]</span></p>
+<h2 id="sec:rnn">RNN</h2>
+<p>As a second example, let’s define a simple (Elman) RNN. Let <span class="math inline">\(d\)</span> be a positive integer.</p>
+<p><span class="math display">\[\begin{aligned}
+x^{(t)} &amp;\in \mathbb{R}^{\mathsf{emb}: d} &amp; t &amp;= 1, \ldots, n \\
+h^{(t)} &amp;\in \mathbb{R}^{\mathsf{state}: d} &amp; t &amp;= 0, \ldots, n\\
+A &amp;\in \mathbb{R}^{\mathsf{state}: d, \mathsf{state&#39;}: d} \\
+B &amp;\in \mathbb{R}^{\mathsf{emb}: d, \mathsf{state&#39;}: d} \\
+c &amp;\in \mathbb{R}^{\mathsf{state&#39;}: d} \\
+h^{(t+1)} &amp;= \left[ \tanh\left( A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{state}}} h^{(t)} + B \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} x^{(t)} + c \right) \right]_{\mathsf{state&#39;} \rightarrow \mathsf{state}}\end{aligned}\]</span></p>
+<p>The renaming is necessary because our notation doesn’t provide a one-step way to apply a linear transformation (<span class="math inline">\(A\)</span>) to one index and put the result in the same index. For possible solutions, see §<a href="#sec:duality" data-reference-type="ref" data-reference="sec:duality">5</a>.</p>
+<h2 id="mlp" class="unnumbered">MLP</h2>
+<p>We now include some additional worked examples to test out the notation.</p>
+<p><span class="math display">\[\begin{aligned}
+V &amp;\in \mathbb{R}^{\mathsf{output}:o, \mathsf{hidden}:h},\ c\in \mathbb{R}^{\mathsf{output}:o} \\
+W &amp;\in \mathbb{R}^{{\mathsf{hidden}:h, \mathsf{in}:i}}, \ b \in \mathbb{R}^{\mathsf{hidden}:h} \\
+X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{in}:i}} \\
+\text{MLP}(X; V, W,b, c) &amp;= \sigma \left( V \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{hidden}}} \sigma \left( W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{in}}} X + b \right) + c \right)  \end{aligned}\]</span></p>
+<h2 id="nn-norms" class="unnumbered">NN “Norms”</h2>
+<p>These functions are often informally described with the same equation, but correspond to very different functions.</p>
+<h3 id="batch-norm" class="unnumbered">Batch Norm</h3>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
+\gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{batch}:b}} \\
+\text{batchnorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{batch}}{\text{mean}}(X)}{\sqrt{\underset{\mathsf{batch}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
+<h3 id="instance-norm" class="unnumbered">Instance Norm</h3>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
+\gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{hidden}:h}} \\
+\text{instancenorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden}}{\text{mean}}[X]}{\sqrt{\underset{\mathsf{hidden}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
+<h3 id="layer-norm" class="unnumbered">Layer Norm</h3>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}} \\
+\gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{hidden}:h}} \\
+\text{layernorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden,channel}}{\text{mean}}[X]}{\sqrt{\underset{\mathsf{hidden, channel}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
+<h2 id="continuous-bag-of-words" class="unnumbered">Continuous Bag of Words</h2>
+<p>A continuous bag-of-words model classifies by summing up the embeddings of a sequence of words and then projecting them to the space of classes.</p>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \{0, 1\}^{{\mathsf{time}:t, \mathsf{vocab}:v}}\ s.t. \ \mathbin{\mathop{\sum}_{\mathsf{v}}} X = 1\\
+E &amp;\in \mathbb{R}^{{\mathsf{vocab}:v, \mathsf{hidden}:h}}\\
+W &amp;\in \mathbb{R}^{{\mathsf{class}:c, \mathsf{hidden}:h}}\\
+\text{cbow}(X; E, W) &amp;= \underset{\mathsf{class}}{\text{softmax}} (W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{hidden}}} E \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{vocab}}} X)\end{aligned}\]</span></p>
+<h2 id="bayes-rule" class="unnumbered">Bayes’ Rule</h2>
+<p>Given <span class="math inline">\(p(B \mid A)\)</span> and <span class="math inline">\(p(A)\)</span> as tensors. Bayes’ rule computes <span class="math inline">\(p(A \mid B)\)</span> by applying the chain rule, computing the marginal, and broadcast dividing.</p>
+<p><span class="math display">\[\begin{aligned}
+BA &amp;\in [0, 1]^{\mathsf{A}{a}, \mathsf{B}{b}}, 
+A \in [0, 1]^{\mathsf{A}{a}} \ s.t. \mathbin{\mathop{\sum}_{\mathsf{A}}} A =  \mathbin{\mathop{\sum}_{\mathsf{B}}} BA =  1 \\
+AB &amp;= (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{}}} A)  / (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{A}}} A)\end{aligned}\]</span></p>
+<h2 id="beam-search" class="unnumbered">Beam Search</h2>
+<p>Beam search is a commonly used approach for approximate discrete search. Here <span class="math inline">\(H\)</span> is the score of each element in the beam, <span class="math inline">\(S\)</span> is the state of each element in the beam, and <span class="math inline">\(f\)</span> is an update function that returns the score of each state transition. Beam step returns the new <span class="math inline">\(H\)</span> tensor.</p>
+<p><span class="math display">\[\begin{aligned}
+H &amp;\in \mathbb{R}^{{ \mathsf{batch}:b, \mathsf{beam}:k}} \\
+S &amp;\in \{0, 1\}^{{ \mathsf{batch}:b, \mathsf{beam}:k, \mathsf{state}:s}} \ s.t. \ \mathbin{\mathop{\sum}_{\mathsf{state}}} X = 1\\
+f &amp;\in \{0, 1\}^{{\mathsf{state}}} \mapsto \mathbb{R}^{{\mathsf{state&#39;}}} \\ 
+\text{beamstep}(H, S) &amp;=  \underset{\mathsf{beam, state&#39;}}{\text{maxk}} \left( \underset{\mathsf{state&#39;}}{\text{softmax}}(f(S)) \odot H  \right)\end{aligned}\]</span></p>
+<h2 id="sudoku-ilp" class="unnumbered">Sudoku ILP</h2>
+<p>Gives a constraint set to ensure a valid Sudoku puzzle. Sudoku is a tensor binary tiled tensor. With Row / Col subgrids of size row / col. Each cell is has assign possible assignments. Constraints need to ensure that there is one digit per row, per column and per sub-box.</p>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \{0, 1\}^{\mathsf{row}: 9, \mathsf{col}:9, \mathsf{assign}:9}  \\
+\mathbin{\mathop{\sum}_{\mathsf{assign}}} Y &amp;= 
+\mathbin{\mathop{\sum}_{\mathsf{Row,row}}} Y = 
+\mathbin{\mathop{\sum}_{\mathsf{Col, col}}} Y =  
+\mathbin{\mathop{\sum}_{\mathsf{row, col}}} Y = 1\\
+Y &amp;\in \{0, 1\}^{\mathsf{Row}: 3, \mathsf{Col}:3, \mathsf{row}: 3, \mathsf{col}:3, \mathsf{assign}:9}  \\
+Y_{\mathsf{Row}:r, \mathsf{row}:r&#39;, \mathsf{Col}:c, \mathsf{col}:c&#39;} &amp;= X_{\mathsf{row}:r*3 + r&#39;-1, \mathsf{cow}:c*3 + c&#39;-1}, \end{aligned}\]</span></p>
+<h2 id="image-max-pooling" class="unnumbered">Image max pooling</h2>
+<p>Max pooling tasks a similar form as the Sudoku example.</p>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{\mathsf{height}: h, \mathsf{width}:w} \\
+\text{maxpool2d}(X, kh, kw) &amp;=  \underset{\mathsf{kh, kw}}{\max}\  U \\
+U &amp;\in \mathbb{R}^{{\mathsf{height}:h / kh,
+\mathsf{width}:w / kw, \mathsf{kh}:kh, \mathsf{kw}:kw}}  \\
+U_{\mathsf{height}:i, \mathsf{width}:j, \mathsf{kh}:di, \mathsf{kw}:dj  } &amp; = X_{\mathsf{height}:i * kh + di -1, \mathsf{width}:j * kw + dj -1}  \end{aligned}\]</span></p>
+<h2 id="explicit-1d-conv" class="unnumbered">Explicit 1D Conv</h2>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{time}:t}}  \\
+W &amp;\in \mathbb{R}^{{\mathsf{out\_channel}:c&#39;, \mathsf{channel}:c, \mathsf{kernel}:k}}  \\
+\text{conv1d}(X, W) &amp;= W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{channel, kernel}}} U \\
+U &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{time}:t-k +1, \mathsf{kernel}:k}}  \\
+U_{\mathsf{time}:i, \mathsf{kernel:j}} &amp; = X_{\mathsf{time}:i+j - 1}  \end{aligned}\]</span></p>
+<h2 id="k-means-clustering" class="unnumbered">K-Means Clustering</h2>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{\mathsf{batch}:b, \mathsf{dim}:k}  \\
+C &amp;\in \mathbb{R}^{\mathsf{cluster}:c, \mathsf{dim}:k}  \\
+\text{kmeans}(X, C) &amp;= \mathbin{\mathop{\sum}_{\mathsf{batch}}} \frac{ Q \odot X}{  Q} \\
+% Q &amp;\in \{0, 1\}^{\name{batch}{b},\name{cluster}{c}} \\
+Q &amp;= \underset{\mathsf{cluster}}{\arg\min} \ \underset{\mathsf{dim}}{\text{norm}}(C-X
+)\end{aligned}\]</span> Runs one step of kmeans clustering. Bottom term computes cluster alignments <span class="math inline">\(Q\)</span> top term recomputes cluster centers <span class="math inline">\(C\)</span>. Like softmax, argmin keeps the same dimensions but uses a 1-hot encoding.</p>
+<h2 id="multivariate-normal" class="unnumbered">Multivariate Normal</h2>
+<p>Bilinear terms are an area that is more verbose with the named tensor notation. However it is also more explicit.</p>
+<p><span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{\mathsf{batch}{b}, \mathsf{d}{k}}  \\
+\mu &amp;\in \mathbb{R}^{{\mathsf{d}{k}}}  \\
+\Sigma &amp; \in   \mathbb{R}^{{\mathsf{d1}{k}, \mathsf{d2}{k}}}  \\
+{\cal N}(X; \mu, \Sigma) &amp;= \frac{\displaystyle \exp\left(-\frac{1}{2}  \left(\underset{\mathsf{d1, d2}}{\text{inv}}(\Sigma) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{d1}}} [X - \mu]_{\mathsf{d} \rightarrow \mathsf{d1}} \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{d2}}} [X - \mu]_{\mathsf{d} \rightarrow \mathsf{d2}} \right) }{\sqrt{(2 \pi)^k \underset{\mathsf{d1, d2}}{\text{det}}(\Sigma)} }\end{aligned}\]</span></p>
+<h2 id="attention-with-causal-masking-for-generation" class="unnumbered">Attention with Causal Masking (For Generation)</h2>
+<p><span class="math display">\[\begin{aligned}
+Q &amp;\in \mathbb{R}^{\mathsf{key}:d_v,\mathsf{time&#39;}:n}\\
+K &amp;\in \mathbb{R}^{\mathsf{head}:h,\mathsf{key}:d_k, \mathsf{time}:n}\\
+V &amp;\in \mathbb{R}^{\mathsf{head}:h, \mathsf{val}:d_v, \mathsf{time}:n}\\
+\text{attention}(Q, K, V) &amp;=  \underset{\mathsf{time}}{\softmax} \left( \frac{Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{key}}} K }{\sqrt{d_k}} + M \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{time}}} V \\
+M &amp; \in \mathbb{R}^{\mathsf{time}:n, \mathsf{time&#39;}:n} \\
+M_{\mathsf{time}:i, \mathsf{time&#39;}:j} &amp; = \begin{cases}0 &amp; i \leq j\\
+-\infty &amp; \text{o.w} \end{cases} \\\end{aligned}\]</span></p>
+<h1 id="sec:definitions">Formal Definitions</h1>
+<h2 id="named-tuples">Named tuples</h2>
+<p>A <em>named tuple</em> is a set of pairs, written as <span class="math inline">\(\{ \mathsf{i}_1: x_1, \ldots, \mathsf{i}_r: x_r\}\)</span>, where <span class="math inline">\(\mathsf{i}_1, \ldots \mathsf{i}_r\)</span> are pairwise distinct <em>names</em>. We write both names and variables ranging over names using sans-serif font.</p>
+<p>If <span class="math inline">\(t\)</span> is a named tuple, we write <span class="math inline">\(\tupledom{t}\)</span> for the set <span class="math inline">\(\{ \mathsf{i} \mid \text{$(\mathsf{i}:x) \in t$ for some $x$} \}\)</span>. If <span class="math inline">\(\mathsf{i} \in \tupledom{t}\)</span>, we write <span class="math inline">\(t.\mathsf{i}\)</span> for the unique <span class="math inline">\(x\)</span> such that <span class="math inline">\((\mathsf{i}:x) \in t\)</span>. We write the empty named tuple as <span class="math inline">\(\emptyset\)</span>.</p>
+<p>We define a partial ordering <span class="math inline">\(\sqsubseteq\)</span> on named tuples: <span class="math inline">\(t_1 \sqsubseteq t_2\)</span> iff for all <span class="math inline">\(\mathsf{i}\)</span>, <span class="math inline">\(x\)</span>, <span class="math inline">\((\mathsf{i}:x) \in t_1\)</span> implies <span class="math inline">\((\mathsf{i}:x) \in t_2\)</span>. Then <span class="math inline">\(t_1 \sqcap t_2\)</span> is the greatest lower bound of <span class="math inline">\(t_1\)</span> and <span class="math inline">\(t_2\)</span>, and <span class="math inline">\(t_1 \sqcup t_2\)</span> is their least upper bound.</p>
+<p>A named tuple <span class="math inline">\(\{ \mathsf{i}_1: X_1, \ldots, \mathsf{i}_r: X_r\}\)</span> where <span class="math inline">\(X_1, \ldots, X_r\)</span> are sets is called a <em>shape</em>, which we will often use to yield a set of named tuples: <span class="math display">\[\tupleshape \{ \mathsf{i}_1: X_1, \ldots, \mathsf{i}_r: X_r\} = \left\{\{ \mathsf{i}_1: x_1, \ldots, \mathsf{i}_r: x_r\} \mid x_1 \in X_1, \ldots, x_r \in X_r\right\}.\]</span></p>
+<p>If <span class="math inline">\(t \in \tupleshape \mathcal{T}\)</span> and <span class="math inline">\(\mathcal{S} \sqsubseteq \mathcal{T}\)</span>, then we write <span class="math inline">\(\left.t\right|_{\mathcal{S}}\)</span> for the named tuple <span class="math inline">\(\{(\mathsf{i}: x) \in t \mid \mathsf{i} \in \tupledom{S}\}\)</span>.</p>
+<h2 id="named-tensors-1">Named tensors</h2>
+<p>Let <span class="math inline">\([n] = \{1, \ldots, n\}\)</span>. We deal with shapes of the form <span class="math inline">\(\{ \mathsf{i}_1: [n_1], \ldots, \mathsf{i}_r: [n_r]\}\)</span> so frequently that we define the shorthand <span class="math inline">\(\{ \mathsf{i}_1: n_1, \ldots, \mathsf{i}_r: n_r\}\)</span>.</p>
+<p>Let <span class="math inline">\(F\)</span> be a field and let <span class="math inline">\(\mathcal{T}\)</span> be a shape. Then a <em>named tensor over <span class="math inline">\(F\)</span> with shape <span class="math inline">\(\mathcal{T}\)</span></em> is a mapping from <span class="math inline">\(\tupleshape \mathcal{T}\)</span> to <span class="math inline">\(F\)</span>. We write the set of all named tensors with shape <span class="math inline">\(\mathcal{T}\)</span> as <span class="math inline">\(F^{\mathcal{T}}\)</span>. To avoid clutter, in place of <span class="math inline">\(F^{\{ \mathsf{i}_1: X_1, \ldots, \mathsf{i}_r: X_r\}}\)</span>, we usually write <span class="math inline">\(F^{\mathsf{i}_1: X_1, \ldots, \mathsf{i}_r: X_r}\)</span>.</p>
+<p>We don’t make any distinction between a scalar (an element of <span class="math inline">\(F\)</span>) and a named tensor with empty shape (an element of <span class="math inline">\(F^\emptyset\)</span>).</p>
+<p>If <span class="math inline">\(A \in F^{\mathcal{T}}\)</span>, then we access an element of <span class="math inline">\(A\)</span> by applying it to a named tuple <span class="math inline">\(t \in \tupleshape\mathcal{T}\)</span>; but we write this using the usual subscript notation: <span class="math inline">\(A_t\)</span> rather than <span class="math inline">\(A(t)\)</span>. To avoid clutter, in place of <span class="math inline">\(A_{\{ \mathsf{i}_1: x_1, \ldots, \mathsf{i}_r: x_r\}}\)</span>, we usually write <span class="math inline">\(A_{\mathsf{i}_1: x_1, \ldots, \mathsf{i}_r: x_r}\)</span>. When a named tensor is an expression like <span class="math inline">\((A+B)\)</span>, we surround it with square brackets like this: <span class="math inline">\([A+B]_{\mathsf{i}_1: x_1, \ldots, \mathsf{i}_r: x_r}\)</span>.</p>
+<p>We also allow partial indices. Let <span class="math inline">\(\mathcal{U}\)</span> be a shape such that <span class="math inline">\(\mathcal{U} = \mathcal{S} \sqcup \mathcal{T}\)</span> and <span class="math inline">\(\mathcal{S} \sqcap \mathcal{T} = \emptyset\)</span>. If <span class="math inline">\(A\)</span> is a tensor with shape <span class="math inline">\(\mathcal{S}\)</span> and <span class="math inline">\(s \in \tupleshape \mathcal{S}\)</span>, then we define <span class="math inline">\(A_s\)</span> to be the named tensor with shape <span class="math inline">\(\mathcal{T}\)</span> such that, for any <span class="math inline">\(t \in \tupleshape \mathcal{T}\)</span>, <span class="math display">\[\begin{aligned}
+\left[A_s\right]_t &amp;= A_{s \sqcup t}.\end{aligned}\]</span> (For the edge case <span class="math inline">\(\mathcal{S} = \mathcal{U}\)</span> and <span class="math inline">\(\mathcal{T} = \emptyset\)</span>, our definitions for indexing and partial indexing coincide: one gives a scalar and the other gives a tensor with empty shape, but we don’t distinguish between the two.)</p>
+<h2 id="sec:tensorfunctions">Extending functions to named tensors</h2>
+<p>In §<a href="#sec:intro" data-reference-type="ref" data-reference="sec:intro">2</a>, we described several classes of functions that can be extended to named tensors. Here, we define how to do this for general functions.</p>
+<p>Let <span class="math inline">\(f \colon F^{\mathcal{S}} \rightarrow G^{\mathcal{T}}\)</span> be a function from tensors to tensors. For any shape <span class="math inline">\(\mathcal{U}\)</span> such that <span class="math inline">\(\mathcal{S} \sqcap \mathcal{U} = \emptyset\)</span> and <span class="math inline">\(\mathcal{T} \sqcap \mathcal{U} = \emptyset\)</span>, we can extend <span class="math inline">\(f\)</span> to: <span class="math display">\[\begin{aligned}
+f &amp;: F^{\mathcal{S} \sqcup \mathcal{U}} \rightarrow G^{\mathcal{T} \sqcup \mathcal{U}} \\
+[f(A)]_u &amp;= f(A_u) \qquad \text{for all $u \in \tupleshape\mathcal{U}$.}\end{aligned}\]</span></p>
+<p>If <span class="math inline">\(f\)</span> is a multary function, we can extend its arguments to larger shapes, and we don’t have to extend all the arguments with the same names. We consider just the case of two arguments; three or more arguments are analogous. Let <span class="math inline">\(f \colon F^{\mathcal{S}} \times G^{\mathcal{T}} \rightarrow H^{\mathcal{U}}\)</span> be a binary function from tensors to tensors. For any shape <span class="math inline">\(\mathcal{S&#39;}\)</span>, <span class="math inline">\(\mathcal{T&#39;}\)</span> such that <span class="math inline">\(\mathcal{U&#39;} = \mathcal{S&#39;} \sqcup \mathcal{T&#39;}\)</span> exists, and <span class="math display">\[\begin{aligned}
+\mathcal{S} \sqcap \mathcal{S&#39;} &amp;= \emptyset \\
+\mathcal{T} \sqcap \mathcal{T&#39;} &amp;= \emptyset \\
+\mathcal{U} \sqcap \mathcal{U&#39;} &amp;= \emptyset \end{aligned}\]</span> we can extend <span class="math inline">\(f\)</span> to: <span class="math display">\[\begin{aligned}
+f &amp;: F^{\mathcal{S} \sqcup \mathcal{S&#39;}} \times G^{\mathcal{T} \sqcup \mathcal{T&#39;}} \rightarrow H^{\mathcal{U} \sqcup \mathcal{U&#39;}} \\
+  [f(A,B)]_u &amp;= f\left(A_{\left.u\right|_{\mathcal{S&#39;}}},B_{\left.u\right|_{\mathcal{T&#39;}}}\right) \qquad \text{for all $u \in \tupleshape\mathcal{U&#39;}$.}\end{aligned}\]</span></p>
+<p>All of the tensor operations described in §<a href="#sec:reductions" data-reference-type="ref" data-reference="sec:reductions">2.3</a>–<a href="#sec:tensorvalued" data-reference-type="ref" data-reference="sec:tensorvalued">2.4</a> can be defined in this way. For example, the contraction operator extends the following “named dot-product”: <span class="math display">\[\begin{aligned}
+\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} &amp;: F^{\mathsf{i}:n} \times F^{\mathsf{i}:n} \rightarrow F \\
+A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B &amp;= \sum_{i=1}^n A_{\mathsf{i}:i} B_{\mathsf{i}:i}.\end{aligned}\]</span></p>
+<h1 id="sec:duality">Duality</h1>
+<p>In applied linear algebra we distinguish between column and row vectors; in pure linear algebra, vector spaces and dual vector spaces; in tensor algebra, contravariant and covariant indices; in quantum mechanics, bras and kets. Do we need something like this?</p>
+<p>In §<a href="#sec:rnn" data-reference-type="ref" data-reference="sec:rnn">3.2</a> we saw that defining an RNN requires renaming of indices, because a linear transformation must map one index to another index; if we want to map an index to itself, we need to use renaming.</p>
+<p>In this section, we describe three possible solutions to this problem.</p>
+<h2 id="contracting-two-names">Contracting two names</h2>
+<p>We define a version of the contraction operator that can contract two indices with different names. If <span class="math inline">\(\mathsf{i} \in \tupledom \mathcal{A}\)</span> and <span class="math inline">\(\mathsf{j} \in \tupledom \mathcal{B}\)</span> and <span class="math inline">\(\mathcal{A}.\mathsf{i} = \mathcal{B}.\mathsf{j} = X\)</span>, then we define <span class="math display">\[A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}|\mathsf{j}}} B = \sum_{x \in X} A_{\mathsf{i}: x} \, B_{\mathsf{j}: x}\]</span></p>
+<p>For example, the RNN would look like this. <span class="math display">\[\begin{aligned}
+x^{(t)} &amp;\in \mathbb{R}^{\mathsf{emb}: d} \\
+h^{(t)} &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+A &amp;\in \mathbb{R}^{\mathsf{state}: d, \mathsf{state&#39;}: d} \\
+B &amp;\in \mathbb{R}^{\mathsf{emb}: d, \mathsf{state}: d} \\
+c &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+h^{(t+1)} &amp;= \tanh\left( A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{state&#39;}|\mathsf{state}}} h^{(t)} + B \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} x^{(t)} + c \right)\end{aligned}\]</span></p>
+<h2 id="starred-index-names">Starred index names</h2>
+<p>If <span class="math inline">\(\mathsf{i}\)</span> is a name, we also allow a tensor to have an index <span class="math inline">\(\mathsf{i*}\)</span> (alternatively: superscript <span class="math inline">\(\mathsf{i}\)</span>). Multiplication contracts starred indices in the left operand with non-starred indices in the right operand. <span class="math display">\[\begin{aligned}
+x^{(t)} &amp;\in \mathbb{R}^{\mathsf{emb}: d} \\
+h^{(t)} &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+A &amp;\in \mathbb{R}^{\mathsf{state*}: d, \mathsf{state}: d} \\
+B &amp;\in \mathbb{R}^{\mathsf{emb*}: d, \mathsf{state}: d} \\
+c &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+h^{(t+1)} &amp;= \tanh\left( A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{state}}} h^{(t)} + B \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{emb}}} x^{(t)} + c \right) \end{aligned}\]</span> In general, if <span class="math inline">\(\mathsf{i*} \in \tupledom \mathcal{A}\)</span> and <span class="math inline">\(\mathsf{i} \in \tupledom \mathcal{B}\)</span> and <span class="math inline">\(\mathcal{A}.\mathsf{i*} = \mathcal{B}.\mathsf{i} = X\)</span>, then we define <span class="math display">\[A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B = \sum_{x \in X} A_{\mathsf{i*}: x} \, B_{\mathsf{i}: x}\]</span> A plus of this notation is that <span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> is associative (but not commutative), like matrix multiplication (proof needed).</p>
+<p>There are a few variants of this idea that have been floated:</p>
+<ol>
+<li><p><span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{}}}\)</span> (no subscript) contracts every starred index in its left operand with every corresponding unstarred index in its right operand. Rejected.</p></li>
+<li><p><span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> contracts <span class="math inline">\(\mathsf{i}\)</span> with <span class="math inline">\(\mathsf{i}\)</span>, and we need another notation like <span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i(*)}}}\)</span> or <span class="math inline">\(\mathop\times\displaylimits_{\mathsf{i}}\)</span> for contracting <span class="math inline">\(\mathsf{i*}\)</span> with <span class="math inline">\(\mathsf{i}\)</span>.</p></li>
+<li><p><span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> always contracts <span class="math inline">\(\mathsf{i*}\)</span> with <span class="math inline">\(\mathsf{i}\)</span>; there’s no way to contract <span class="math inline">\(\mathsf{i}\)</span> with <span class="math inline">\(\mathsf{i}\)</span>.</p></li>
+</ol>
+<h2 id="sec:tensorsoftensors">Named and numbered indices</h2>
+<p>We allow indices to have names that are natural numbers <span class="math inline">\(1, 2, \ldots\)</span>, and we define “numbering” and “naming” operators:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(A_{\mathsf{i}}\)</span></td>
+<td style="text-align: left;">rename index <span class="math inline">\(\mathsf{i}\)</span> to 1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\(A_{\mathsf{i},\mathsf{j}}\)</span></td>
+<td style="text-align: left;">rename index <span class="math inline">\(\mathsf{i}\)</span> to 1 and <span class="math inline">\(\mathsf{j}\)</span> to 2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(A_{\rightarrow\mathsf{i}}\)</span></td>
+<td style="text-align: left;">rename index 1 to <span class="math inline">\(\mathsf{i}\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\(A_{\rightarrow\mathsf{i},\mathsf{j}}\)</span></td>
+<td style="text-align: left;">rename index 1 to <span class="math inline">\(\mathsf{i}\)</span> and 2 to <span class="math inline">\(\mathsf{j}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The numbering operators are only defined on tensors that have no numbered indices.</p>
+<p>Then we adopt the convention that standard vector/matrix operations operate on the numbered indices. For example, vector dot-product always uses index 1 of both its operands, so that we can write <span class="math display">\[C = A_{\mathsf{i}} \cdot B_{\mathsf{i}}\]</span> equivalent to <span class="math inline">\(C = A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B\)</span>.</p>
+<p>Previously, we had to define a new version of every operation; most of the time, it looked similar to the standard version (e.g., <span class="math inline">\(\max\)</span> vs <span class="math inline">\(\max_{\mathsf{i}}\)</span>), but occasionally it looked quite different (e.g., matrix inversion). With numbered indices, we can use standard notation for everything. (This also suggests a clean way to integrate code that uses named tensors with code that uses ordinary tensors.)</p>
+<p>We also get the renaming operation for free: <span class="math inline">\(A_{\mathsf{i}\rightarrow\mathsf{j}} = [A_{\mathsf{i}}]_{\rightarrow\mathsf{j}}\)</span> renames index <span class="math inline">\(\mathsf{i}\)</span> to <span class="math inline">\(\mathsf{j}\)</span>.</p>
+<p>Finally, this notation alleviates the duality problem, as can be seen in the definition of a RNN: <span class="math display">\[\begin{aligned}
+x^{(t)} &amp;\in \mathbb{R}^{\mathsf{emb}: d} \\
+h^{(t)} &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+A &amp;\in \mathbb{R}^{\mathsf{state}: d, \mathsf{state&#39;}: d} \\
+B &amp;\in \mathbb{R}^{\mathsf{state}: d, \mathsf{emb}: d} \\
+c &amp;\in \mathbb{R}^{\mathsf{state}: d} \\
+h^{(t+1)}_{\mathsf{state}} &amp;= \tanh\left( A_{\mathsf{state},\mathsf{state&#39;}} \, h^{(t)}_{\mathsf{state}} + B_{\mathsf{state},\mathsf{emb}} \, x^{(t)}_{\mathsf{emb}} + c_{\mathsf{state}} \right) \\
+\intertext{or equivalently,}
+h^{(t+1)} &amp;= \tanh\left( A_{\mathsf{state&#39;}} \cdot h^{(t)}_{\mathsf{state}} + B_{\mathsf{emb}} \cdot x^{(t)}_{\mathsf{emb}} + c \right) \\\end{aligned}\]</span></p>
+<p>Attention: <span class="math display">\[\begin{aligned}
+  \text{Att} &amp;\colon \mathbb{R}^{\mathsf{time&#39;}:n&#39;,\mathsf{key}:d_k} \times \mathbb{R}^{\mathsf{time}:n,\mathsf{key}:d_k} \times \mathbb{R}^{\mathsf{time}:n,\mathsf{val}:d_v} \rightarrow \mathbb{R}^{\mathsf{time&#39;}:n&#39;,\mathsf{val}:d_v} \\
+  \text{Att}(Q,K,V) &amp;= \softmax \left[ \frac{Q_{\mathsf{key}} \cdot K_\mathsf{key}}{\sqrt{d_k}} \right]_{\mathsf{time}} \cdot V_{\mathsf{time}}\end{aligned}\]</span></p>
+<p>Multivariate normal distribution: <span class="math display">\[\begin{aligned}
+X &amp;\in \mathbb{R}^{\mathsf{batch}:{b}, \mathsf{d}:{k}}  \\
+\mu &amp;\in \mathbb{R}^{{\mathsf{d}:{k}}}  \\
+\Sigma &amp; \in   \mathbb{R}^{{\mathsf{d}:{k}, \mathsf{d&#39;}:{k}}}  \\
+{\cal N}(X; \mu, \Sigma) &amp;= \frac{\displaystyle \exp\left(-\tfrac{1}{2} [X - \mu]_{\mathsf{d}}^\top \, \Sigma_{\mathsf{d},\mathsf{d&#39;}}^{-1} \, [X - \mu]_{\mathsf{d}} \right) }{\sqrt{(2 \pi)^k \, \mathop{\text{det}} \Sigma_{\mathsf{d},\mathsf{d&#39;}}} }\end{aligned}\]</span></p>
+<p>Because this notation can be a little more verbose (often requiring you to write index names twice), we’d keep around the notation <span class="math inline">\(A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B\)</span> as a shorthand for <span class="math inline">\(A_{\mathsf{i}} \cdot B_{\mathsf{i}}\)</span>. We’d also keep named reductions, or at least <span class="math inline">\(\softmax_{\mathsf{i}}\)</span>.</p>
+<div id="refs" class="references">
+<div id="ref-chen2017typesafe">
+<p>Chen, Tongfei. 2017. “Typesafe Abstractions for Tensor Operations.” In <em>Proceedings of the 8th Acm Sigplan International Symposium on Scala</em>, 45–50. SCALA 2017. <a href="https://doi.org/10.1145/3136000.3136001">https://doi.org/10.1145/3136000.3136001</a>.</p>
+</div>
+<div id="ref-numpy">
+<p>Harris, Charles R., K. Jarrod Millman, St’efan J. van der Walt, Ralf Gommers, Pauli Virtanen, David Cournapeau, Eric Wieser, et al. 2020. “Array Programming with NumPy.” <em>Nature</em> 585 (7825): 357–62. <a href="https://doi.org/10.1038/s41586-020-2649-2">https://doi.org/10.1038/s41586-020-2649-2</a>.</p>
+</div>
+<div id="ref-maclaurin+:2019">
+<p>Maclaurin, Dougal, Alexey Radul, Matthew J. Johnson, and Dimitrios Vytiniotis. 2019. “Dex: Array Programming with Typed Indices.” In <em>NeurIPS Workshop on Program Transformations for Ml</em>. <a href="https://openreview.net/forum?id=rJxd7vsWPS">https://openreview.net/forum?id=rJxd7vsWPS</a>.</p>
+</div>
+<div id="ref-pytorch">
+<p>Paszke, Adam, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory Chanan, Trevor Killeen, et al. 2019. “PyTorch: An Imperative Style, High-Performance Deep Learning Library.” In <em>Advances in Neural Information Processing Systems 32</em>, edited by H. Wallach, H. Larochelle, A. Beygelzimer, F. dAlché-Buc, E. Fox, and R. Garnett, 8024–35. Curran Associates, Inc. <a href="http://papers.neurips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library.pdf">http://papers.neurips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library.pdf</a>.</p>
+</div>
+<div id="ref-namedtensor">
+<p>Rush, Alexander. 2019. “Named Tensors.” <a href="https://github.com/harvardnlp/NamedTensor">https://github.com/harvardnlp/NamedTensor</a>.</p>
+</div>
+<div id="ref-tsalib">
+<p>Sinha, Nishant. 2018. “Tensor Shape (Annotation) Library.” <a href="https://github.com/ofnote/tsalib">https://github.com/ofnote/tsalib</a>.</p>
+</div>
+<div id="ref-named-tensors">
+<p>Torch Contributors. 2019. “Named Tensors.” <a href="https://pytorch.org/docs/stable/named_tensor.html">https://pytorch.org/docs/stable/named_tensor.html</a>.</p>
+</div>
+<div id="ref-vaswani+:2017">
+<p>Vaswani, Ashish, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. “Attention Is All You Need.” In <em>Advances in Neural Information Processing Systems</em>, edited by I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, 30:5998–6008. Curran Associates, Inc. <a href="https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf">https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf</a>.</p>
+</div>
+</div>
 </body>
+</html>
