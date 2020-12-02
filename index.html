@@ -282,12 +282,12 @@ X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
 \gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{hidden}:h}} \\
-\text{instancenorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden}}{\text{mean}}[X]}{\sqrt{\underset{\mathsf{hidden}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
+\text{instancenorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden}}{\text{mean}}(X)}{\sqrt{\underset{\mathsf{hidden}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta\end{aligned}\]</span></p>
 <h3 id="layer-norm" class="unnumbered">Layer Norm</h3>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}} \\
 \gamma, \beta &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{hidden}:h}} \\
-\text{layernorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden,channel}}{\text{mean}}[X]}{\sqrt{\underset{\mathsf{hidden, channel}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
+\text{layernorm}(X; \gamma, \beta) &amp;= \frac{X - \underset{\mathsf{hidden,channel}}{\text{mean}}(X)}{\sqrt{\underset{\mathsf{hidden, channel}}{\text{var}}(X)} + \epsilon } \odot \gamma + \beta \end{aligned}\]</span></p>
 <h2 id="continuous-bag-of-words" class="unnumbered">Continuous Bag of Words</h2>
 <p>A continuous bag-of-words model classifies by summing up the embeddings of a sequence of words and then projecting them to the space of classes.</p>
 <p><span class="math display">\[\begin{aligned}
