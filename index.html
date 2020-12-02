@@ -38,6 +38,7 @@
     </style>
     <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
   
+  <div style="display:none">
   \(
     \require{ams}
   \DeclareMathOperator*{\softmax}{softmax}
@@ -62,6 +63,7 @@
   \newcommand{\dmodel}{d_{\text{model}}}
   
   \)
+  </div>
 </head>
 <body>
 <header id="title-block-header">
@@ -294,9 +296,9 @@ W &amp;\in \mathbb{R}^{{\mathsf{class}:c, \mathsf{hidden}:h}}\\
 <h2 id="bayes-rule" class="unnumbered">Bayes’ Rule</h2>
 <p>Named dimensions are very helpful for working with discrete random variables. For instance, given <span class="math inline">\(p(B \mid A)\)</span> and <span class="math inline">\(p(A)\)</span> as tensors. Bayes’ rule computes <span class="math inline">\(p(A \mid B)\)</span> by applying the chain rule, computing the marginal, and broadcast dividing.</p>
 <p><span class="math display">\[\begin{aligned}
-BA &amp;\in [0, 1]^{\mathsf{A}{a}, \mathsf{B}{b}}, 
-A \in [0, 1]^{\mathsf{A}{a}} \ s.t. \mathbin{\mathop{\sum}_{\mathsf{A}}} A =  \mathbin{\mathop{\sum}_{\mathsf{B}}} BA =  1 \\
-AB &amp;= (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{}}} A)  / (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{A}}} A)\end{aligned}\]</span></p>
+BA &amp;\in [0, 1]^{\mathsf{A}:a, \mathsf{B}:b}, 
+A \in [0, 1]^{\mathsf{A}:a} \ s.t. \mathbin{\mathop{\sum}_{\mathsf{A}}} A =  \mathbin{\mathop{\sum}_{\mathsf{B}}} BA =  1 \\
+AB &amp;= (BA \odot A)  / (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{A}}} A)\end{aligned}\]</span></p>
 <h2 id="sudoku-ilp" class="unnumbered">Sudoku ILP</h2>
 <p>Sudoku puzzles can be represented as binary tiled tensors. Given a grid we can check that it is valid by converting it to a grid of grids. Constraints then ensure that there is one digit per row, per column and per sub-box.</p>
 <p><span class="math display">\[\begin{aligned}
