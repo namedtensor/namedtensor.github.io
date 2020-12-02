@@ -38,6 +38,7 @@
     </style>
     <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
   
+  <div style="display:none">
   \(
     \require{ams}
   \DeclareMathOperator*{\softmax}{softmax}
@@ -48,7 +49,7 @@
   \newcommand{\ntup}[2]{\name{#1}:#2}
   \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
   \newcommand{\displaylimits}{}
-  \newcommand{\intertext}[1]{\\ \text{#1}: \\ \\ }
+  \newcommand{\intertext}[1]{\text{#1}:\ \ }
   \newcommand{\nndot}[2]{\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\name{#1}|\name{#2}}}}
   
   \DeclareMathOperator*{\softmax}{softmax}
@@ -62,6 +63,7 @@
   \newcommand{\dmodel}{d_{\text{model}}}
   
   \)
+  </div>
 </head>
 <body>
 <header id="title-block-header">
@@ -75,6 +77,7 @@
 <li><a href="#sec:examples">Examples</a></li>
 <li><a href="#sec:definitions">Formal Definitions</a></li>
 <li><a href="#sec:duality">Duality</a></li>
+<li><a href="#references">References</a></li>
 </ul>
 </nav>
 <h1 id="introduction">Introduction</h1>
@@ -83,6 +86,7 @@
 <p>Libraries for programming with neural networks <span class="citation" data-cites="numpy pytorch">(Harris et al. 2020; Paszke et al. 2019)</span> provide multidimensional arrays, called tensors (although usually without the theory associated with tensors in linear algebra and physics), and a rich array of operations on tensors. These libraries have limitations of their own, however, because they inherit from mathematical notation the convention of identifying indices by position. Quite a few libraries have been developed to identify indices by <em>name</em> instead: Nexus <span class="citation" data-cites="chen2017typesafe">(Chen 2017)</span>, tsalib <span class="citation" data-cites="tsalib">(Sinha 2018)</span>, NamedTensor <span class="citation" data-cites="namedtensor">(Rush 2019)</span>, named tensors in PyTorch <span class="citation" data-cites="named-tensors">(Torch Contributors 2019)</span>, and Dex <span class="citation" data-cites="maclaurin+:2019">(Maclaurin et al. 2019)</span>. (Some of these libraries also add types to indices, but here we are only interested in adding names.)</p>
 <p>Back in the realm of mathematical notation, then, we need to improve notation in two ways: first, the flexibility of working with multidimensional arrays, and second, the perspicuity of identifying indices by name instead of by position. This document describes our proposal to do both.</p>
 <p>As a preview, the above equation becomes <span class="math display">\[\text{Attention}(Q,K,V) = \softmax_{\mathsf{time}} \left( \frac{Q \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{key}}} K}{\sqrt{d_k}} \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{time}}} V.\]</span></p>
+<p>More examples of the notation are given in § <a href="#sec:examples" data-reference-type="ref" data-reference="sec:examples">3</a>.</p>
 <p>The source code for this document can be found at <a href="https://github.com/namedtensor/notation/">https://github.com/namedtensor/notation/</a>. We invite anyone to make comments on this proposal by submitting issues or pull requests on this repository.</p>
 <h1 id="sec:intro">Informal Overview</h1>
 <p>Let’s think first about the usual notions of vectors, matrices, and tensors, without named indices.</p>
@@ -458,6 +462,7 @@ X &amp;\in \mathbb{R}^{\mathsf{batch}:{b}, \mathsf{d}:{k}}  \\
 \Sigma &amp; \in   \mathbb{R}^{{\mathsf{d}:{k}, \mathsf{d&#39;}:{k}}}  \\
 {\cal N}(X; \mu, \Sigma) &amp;= \frac{\displaystyle \exp\left(-\tfrac{1}{2} [X - \mu]_{\mathsf{d}}^\top \, \Sigma_{\mathsf{d},\mathsf{d&#39;}}^{-1} \, [X - \mu]_{\mathsf{d}} \right) }{\sqrt{(2 \pi)^k \, \mathop{\text{det}} \Sigma_{\mathsf{d},\mathsf{d&#39;}}} }\end{aligned}\]</span></p>
 <p>Because this notation can be a little more verbose (often requiring you to write index names twice), we’d keep around the notation <span class="math inline">\(A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B\)</span> as a shorthand for <span class="math inline">\(A_{\mathsf{i}} \cdot B_{\mathsf{i}}\)</span>. We’d also keep named reductions, or at least <span class="math inline">\(\softmax_{\mathsf{i}}\)</span>.</p>
+<h1 id="references" class="unnumbered">References</h1>
 <div id="refs" class="references">
 <div id="ref-chen2017typesafe">
 <p>Chen, Tongfei. 2017. “Typesafe Abstractions for Tensor Operations.” In <em>Proceedings of the 8th Acm Sigplan International Symposium on Scala</em>, 45–50. SCALA 2017. <a href="https://doi.org/10.1145/3136000.3136001">https://doi.org/10.1145/3136000.3136001</a>.</p>
