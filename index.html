@@ -268,7 +268,7 @@ W &amp;\in \mathbb{R}^{{\mathsf{hidden}:h, \mathsf{in}:i}}, \ b \in \mathbb{R}^{
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{in}:i}} \\
 \text{MLP}(X; V, W,b, c) &amp;= \sigma \left( V \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{hidden}}} \sigma \left( W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{in}}} X + b \right) + c \right)  \end{aligned}\]</span></p>
 <h2 id="deep-learning-norms" class="unnumbered">Deep Learning Norms</h2>
-<p>These functions are often informally described with the same equation, but correspond to very different functions.</p>
+<p>These three functions are often informally described using the same equation, but they each correspond to very different functions. They differ by which axes are normalized.</p>
 <h3 id="batch-norm" class="unnumbered">Batch Norm</h3>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}}\\
@@ -287,7 +287,7 @@ X &amp;\in \mathbb{R}^{{\mathsf{batch}:b, \mathsf{channel}:c, \mathsf{hidden}:h}
 <h2 id="continuous-bag-of-words" class="unnumbered">Continuous Bag of Words</h2>
 <p>A continuous bag-of-words model classifies by summing up the embeddings of a sequence of words and then projecting them to the space of classes.</p>
 <p><span class="math display">\[\begin{aligned}
-X &amp;\in \{0, 1\}^{{\mathsf{time}:t, \mathsf{vocab}:v}}\ s.t. \ \mathbin{\mathop{\sum}_{\mathsf{v}}} X = 1\\
+X &amp;\in \{0, 1\}^{{\mathsf{time}:t, \mathsf{vocab}:v}}, \mathbin{\mathop{\sum}_{\mathsf{v}}} X = 1\\
 E &amp;\in \mathbb{R}^{{\mathsf{vocab}:v, \mathsf{hidden}:h}}\\
 W &amp;\in \mathbb{R}^{{\mathsf{class}:c, \mathsf{hidden}:h}}\\
 \text{cbow}(X; E, W) &amp;= \underset{\mathsf{class}}{\text{softmax}} (W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{hidden}}} E \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{vocab}}} X)\end{aligned}\]</span></p>
@@ -295,18 +295,19 @@ W &amp;\in \mathbb{R}^{{\mathsf{class}:c, \mathsf{hidden}:h}}\\
 <p>Named dimensions are very helpful for working with discrete random variables. For instance, given <span class="math inline">\(p(B \mid A)\)</span> and <span class="math inline">\(p(A)\)</span> as tensors. Bayes’ rule computes <span class="math inline">\(p(A \mid B)\)</span> by applying the chain rule, computing the marginal, and broadcast dividing.</p>
 <p><span class="math display">\[\begin{aligned}
 BA &amp;\in [0, 1]^{\mathsf{A}:a, \mathsf{B}:b}, 
-A \in [0, 1]^{\mathsf{A}:a} \ s.t. \mathbin{\mathop{\sum}_{\mathsf{A}}} A =  \mathbin{\mathop{\sum}_{\mathsf{B}}} BA =  1 \\
+A \in [0, 1]^{\mathsf{A}:a}, \mathbin{\mathop{\sum}_{\mathsf{A}}} A =  \mathbin{\mathop{\sum}_{\mathsf{B}}} BA =  1 \\
 AB &amp;= (BA \odot A)  / (BA \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{A}}} A)\end{aligned}\]</span></p>
 <h2 id="sudoku-ilp" class="unnumbered">Sudoku ILP</h2>
 <p>Sudoku puzzles can be represented as binary tiled tensors. Given a grid we can check that it is valid by converting it to a grid of grids. Constraints then ensure that there is one digit per row, per column and per sub-box.</p>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \{0, 1\}^{\mathsf{row}: 9, \mathsf{col}:9, \mathsf{assign}:9}  \\
-\mathbin{\mathop{\sum}_{\mathsf{assign}}} Y &amp;= 
+\text{check}(X) &amp;=
+\left(\mathbin{\mathop{\sum}_{\mathsf{assign}}} Y = 
 \mathbin{\mathop{\sum}_{\mathsf{Row,row}}} Y = 
 \mathbin{\mathop{\sum}_{\mathsf{Col, col}}} Y =  
-\mathbin{\mathop{\sum}_{\mathsf{row, col}}} Y = 1\\
+\mathbin{\mathop{\sum}_{\mathsf{row, col}}} Y = 1 \right) \\
 Y &amp;\in \{0, 1\}^{\mathsf{Row}: 3, \mathsf{Col}:3, \mathsf{row}: 3, \mathsf{col}:3, \mathsf{assign}:9}  \\
-Y_{\mathsf{Row}:r, \mathsf{row}:r&#39;, \mathsf{Col}:c, \mathsf{col}:c&#39;} &amp;= X_{\mathsf{row}:r*3 + r&#39;-1, \mathsf{cow}:c*3 + c&#39;-1}, \end{aligned}\]</span></p>
+Y_{\mathsf{Row}:r, \mathsf{row}:r&#39;, \mathsf{Col}:c, \mathsf{col}:c&#39;} &amp;= X_{\mathsf{row}:r\times 3 + r&#39;-1, \mathsf{col}:c\times3 + c&#39;-1}, \end{aligned}\]</span></p>
 <h2 id="max-pooling" class="unnumbered">Max Pooling</h2>
 <p>Max pooling used in image recognition takes a similar form as the Sudoku example.</p>
 <p><span class="math display">\[\begin{aligned}
@@ -314,15 +315,15 @@ X &amp;\in \mathbb{R}^{\mathsf{height}: h, \mathsf{width}:w} \\
 \text{maxpool2d}(X, kh, kw) &amp;=  \underset{\mathsf{kh, kw}}{\max}\  U \\
 U &amp;\in \mathbb{R}^{{\mathsf{height}:h / kh,
 \mathsf{width}:w / kw, \mathsf{kh}:kh, \mathsf{kw}:kw}}  \\
-U_{\mathsf{height}:i, \mathsf{width}:j, \mathsf{kh}:di, \mathsf{kw}:dj  } &amp; = X_{\mathsf{height}:i * kh + di -1, \mathsf{width}:j * kw + dj -1}  \end{aligned}\]</span></p>
+U_{\mathsf{height}:i, \mathsf{width}:j, \mathsf{kh}:di, \mathsf{kw}:dj  } &amp; = X_{\mathsf{height}:i \times kh + di -1, \mathsf{width}:j \times kw + dj -1}  \end{aligned}\]</span></p>
 <h2 id="d-convolution" class="unnumbered">1D Convolution</h2>
 <p>1D Convolution can be easily written by unrolling a tensor and then applying a standard dot product.</p>
 <p><span class="math display">\[\begin{aligned}
 X &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{time}:t}}  \\
-W &amp;\in \mathbb{R}^{{\mathsf{out\_channel}:c&#39;, \mathsf{channel}:c, \mathsf{kernel}:k}}  \\
-\text{conv1d}(X, W) &amp;= W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{channel, kernel}}} U \\
-U &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{time}:t-k +1, \mathsf{kernel}:k}}  \\
-U_{\mathsf{time}:i, \mathsf{kernel:j}} &amp; = X_{\mathsf{time}:i+j - 1}  \end{aligned}\]</span></p>
+W &amp;\in \mathbb{R}^{{\mathsf{out\_channel}:c&#39;, \mathsf{channel}:c, \mathsf{kw}:k}}  \\
+\text{conv1d}(X, W) &amp;= W \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{channel, kw}}} U \\
+U &amp;\in \mathbb{R}^{{\mathsf{channel}:c, \mathsf{time}:t-k +1, \mathsf{kw}:k}}  \\
+U_{\mathsf{time}:i, \mathsf{kw:j}} &amp; = X_{\mathsf{time}:i+j - 1}  \end{aligned}\]</span></p>
 <h2 id="k-means-clustering" class="unnumbered">K-Means Clustering</h2>
 <p>Runs one step of kmeans clustering. Bottom term computes cluster alignments <span class="math inline">\(Q\)</span> top term recomputes cluster centers <span class="math inline">\(C\)</span>. Top term reestimates cluster centers. Like softmax, argmin keeps the same dimensions but uses a 1-hot encoding.</p>
 <p><span class="math display">\[\begin{aligned}
@@ -336,7 +337,7 @@ Q &amp;= \underset{\mathsf{cluster}}{\arg\min} \ \underset{\mathsf{dim}}{\text{n
 <p>Beam search is a commonly used approach for approximate discrete search. Here <span class="math inline">\(H\)</span> is the score of each element in the beam, <span class="math inline">\(S\)</span> is the state of each element in the beam, and <span class="math inline">\(f\)</span> is an update function that returns the score of each state transition. Beam step returns the new <span class="math inline">\(H\)</span> tensor.</p>
 <p><span class="math display">\[\begin{aligned}
 H &amp;\in \mathbb{R}^{{ \mathsf{batch}:b, \mathsf{beam}:k}} \\
-S &amp;\in \{0, 1\}^{{ \mathsf{batch}:b, \mathsf{beam}:k, \mathsf{state}:s}} \ s.t. \ \mathbin{\mathop{\sum}_{\mathsf{state}}} X = 1\\
+S &amp;\in \{0, 1\}^{{ \mathsf{batch}:b, \mathsf{beam}:k, \mathsf{state}:s}}, \mathbin{\mathop{\sum}_{\mathsf{state}}} X = 1\\
 f &amp;\in \{0, 1\}^{{\mathsf{state}}} \mapsto \mathbb{R}^{{\mathsf{state&#39;}}} \\ 
 \text{beamstep}(H, S) &amp;=  \underset{\mathsf{beam, state&#39;}}{\text{maxk}} \left( \underset{\mathsf{state&#39;}}{\text{softmax}}(f(S)) \odot H  \right)\end{aligned}\]</span></p>
 <h2 id="multivariate-normal" class="unnumbered">Multivariate Normal</h2>
