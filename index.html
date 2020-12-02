@@ -38,7 +38,6 @@
     </style>
     <script src="/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
   
-  <div style="display:none">
   \(
     \require{ams}
   \DeclareMathOperator*{\softmax}{softmax}
@@ -49,7 +48,7 @@
   \newcommand{\ntup}[2]{\name{#1}:#2}
   \newcommand{\nfun}[2]{\underset{\name{#1}}{#2}}
   \newcommand{\displaylimits}{}
-  \newcommand{\intertext}[1]{\text{#1}:\ \ }
+  \newcommand{\intertext}[1]{\\ \text{#1}: \\ \\ }
   \newcommand{\nndot}[2]{\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\name{#1}|\name{#2}}}}
   
   \DeclareMathOperator*{\softmax}{softmax}
@@ -63,7 +62,6 @@
   \newcommand{\dmodel}{d_{\text{model}}}
   
   \)
-  </div>
 </head>
 <body>
 <header id="title-block-header">
@@ -93,31 +91,31 @@
 <h2 id="named-tensors">Named tensors</h2>
 <p>A <em>named tuple</em> (also known as a <em>record</em>) looks like this: <span class="math display">\[\{ \mathsf{foo}: 2, \mathsf{bar}: 3\}.\]</span> The order of the elements doesn’t matter: <span class="math display">\[\{ \mathsf{foo}: 2, \mathsf{bar}: 3\} = \{ \mathsf{bar}: 3, \mathsf{foo}: 2\}.\]</span> We use <span class="sans-serif">sans-serif</span> for names.</p>
 <p>Then, a real <em>named tensor</em> is a function from named tuples to reals. Each of its indices has a name, and the ordering of the indices doesn’t matter. For example, here is a tensor with an index named <span class="math inline">\(\mathsf{foo}\)</span> ranging from 1 to 2 and an index named <span class="math inline">\(\mathsf{bar}\)</span> ranging from 1 to 3. More succinctly, we say that the <em>shape</em> of <span class="math inline">\(A\)</span> is <span class="math inline">\(\{ \mathsf{foo}:2, \mathsf{bar}:3\}\)</span>. <span class="math display">\[A = 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3 &amp; 1 &amp; 4 \\
   1 &amp; 5 &amp; 9
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\]</span></p>
 <p>We use uppercase italic letters for variables standing for named tensors. We don’t mind if you use another convention, but urge you not to use different styles for tensors and their elements. For example, if <span class="math inline">\(\mathbf{A}\)</span> is a tensor, then an element of <span class="math inline">\(\mathbf{A}\)</span> is written as <span class="math inline">\(\mathbf{A}_{\mathsf{foo}:2, \mathsf{bar}:3}\)</span> – not <span class="math inline">\(A_{\mathsf{foo}:2,\mathsf{bar}:3}\)</span> or <span class="math inline">\(a_{\mathsf{foo}:2,\mathsf{bar}:3}\)</span>.</p>
 <p>Just as the set of all size-<span class="math inline">\(n\)</span> real vectors is written <span class="math inline">\(\mathbb{R}^n\)</span>, and the set of all <span class="math inline">\(m\times n\)</span> real matrices is often written <span class="math inline">\(\mathbb{R}^{m \times n}\)</span> (which makes sense because one sometimes writes <span class="math inline">\(Y^X\)</span> for the set of all functions from <span class="math inline">\(X\)</span> to <span class="math inline">\(Y\)</span>), we write <span class="math inline">\(\mathbb{R}^{\mathsf{foo}: 2, \mathsf{bar}: 3}\)</span> for the set of all tensors with shape <span class="math inline">\(\{ \mathsf{foo}:2, \mathsf{bar}:3\}\)</span>.</p>
 <p>We access elements of <span class="math inline">\(A\)</span> using subscripts: <span class="math inline">\(A_{\mathsf{foo}: 1, \mathsf{bar}: 3} = A_{\mathsf{bar}: 3, \mathsf{foo}: 1} = 4\)</span>. We also allow partial indexing: <span class="math display">\[\begin{aligned}
 A_{\mathsf{foo}:1} &amp;= 
- \stackrel{\large \mathsf{bar}}{ \begin{bmatrix} 
+ \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3 &amp; 1 &amp; 4
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 
 \\
 A_{\mathsf{bar}:3} &amp;= 
- \stackrel{\large \mathsf{foo}}{ \begin{bmatrix} 
+ \begin{array}[b]{c} \smash{\mathsf{foo}} \\ \begin{bmatrix} 
   4 &amp; 9
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\end{aligned}\]</span></p>
 <h2 id="elementwise-operations">Elementwise operations</h2>
 <p>Any function from scalars to scalars can be applied elementwise to a named tensor: <span class="math display">\[\exp A = 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   \exp 3 &amp; \exp 1 &amp; \exp 4 \\
   \exp 1 &amp; \exp 5 &amp; \exp 9
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\]</span> More elementwise unary operations: <span class="math display">\[\begin{array}{cl}
 kA &amp; \text{scalar multiplication by $k$} \\
 -A &amp; \text{elementwise negation} \\
@@ -126,36 +124,36 @@ kA &amp; \text{scalar multiplication by $k$} \\
 \end{array}\]</span></p>
 <p>Any function or operator that takes two scalar arguments can be applied elementwise to two named tensors with the same shape. If <span class="math inline">\(A\)</span> is as above and <span class="math display">\[\begin{aligned}
 B &amp;= 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   2 &amp; 7 &amp; 1 \\
   8 &amp; 2 &amp; 8
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 \intertext{then}
 A + B &amp;= 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3+2 &amp; 1+7 &amp; 4+1 \\
   1+8 &amp; 5+2 &amp; 9+8
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\end{aligned}\]</span></p>
 <p>But things get more complicated when <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> don’t have the same shape. If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> each have an index with the same name (and size), the two indices are <em>aligned</em>, as above. But if <span class="math inline">\(A\)</span> has an index named <span class="math inline">\(\mathsf{i}\)</span> and <span class="math inline">\(B\)</span> doesn’t, then we do <em>broadcasting</em>, which means effectively that we replace <span class="math inline">\(B\)</span> with a new tensor <span class="math inline">\(B&#39;\)</span> that contains a copy of <span class="math inline">\(B\)</span> for every value of index <span class="math inline">\(\mathsf{i}\)</span>. <span class="math display">\[\begin{aligned}
 A + 1 &amp;= 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3+1 &amp; 1+1 &amp; 4+1 \\
   1+1 &amp; 5+1 &amp; 9+1
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 A + B_{\mathsf{foo:1}} &amp;= 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3+2 &amp; 1+7 &amp; 4+1 \\
   1+2 &amp; 5+7 &amp; 9+1
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 A + B_{\mathsf{bar:3}} &amp;= 
- \stackrel{\large \mathsf{bar}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3+1 &amp; 1+1 &amp; 4+1 \\
   1+8 &amp; 5+8 &amp; 9+8
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\end{aligned}\]</span> Similarly, if <span class="math inline">\(B\)</span> has an index named <span class="math inline">\(\mathsf{i}\)</span> and <span class="math inline">\(A\)</span> doesn’t, then we effectively replace <span class="math inline">\(A\)</span> with a new tensor <span class="math inline">\(A&#39;\)</span> that contains a copy of <span class="math inline">\(A\)</span> for every value of index <span class="math inline">\(\mathsf{i}\)</span>. If you’ve programmed with NumPy or any of its derivatives, this should be unsurprising to you.</p>
 <p>More elementwise binary operations: <span class="math display">\[\begin{array}{cl}
 A+B &amp; \text{elementwise addition} \\
@@ -168,14 +166,14 @@ A\odot B &amp; \text{elementwise (Hadamard) product} \\
 <p>The same rules for alignment and broadcasting apply to functions that take tensor as arguments or return tensors. The gory details are in §<a href="#sec:tensorfunctions" data-reference-type="ref" data-reference="sec:tensorfunctions">4.3</a>, but we present the most important subcases here. The first is <em>reductions</em>, which are functions from vectors to scalars. Unlike with functions on scalars, we always have to specify which index these functions apply to, using a subscript. (This is equivalent to the <code>axis</code> argument that most NumPy reductions take.)</p>
 <p>For example, using the same example tensor <span class="math inline">\(A\)</span> from above, <span class="math display">\[\begin{aligned}
 \sum_{\mathsf{foo}} A &amp;= 
- \stackrel{\large \mathsf{bar}}{ \begin{bmatrix} 
+ \begin{array}[b]{c} \smash{\mathsf{bar}} \\ \begin{bmatrix} 
   3+1 &amp; 1+5 &amp; 4+9
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 \sum_{\mathsf{bar}} A &amp;= 
- \stackrel{\large \mathsf{foo}}{ \begin{bmatrix} 
+ \begin{array}[b]{c} \smash{\mathsf{foo}} \\ \begin{bmatrix} 
   3+1+4 &amp; 1+5+9
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
 .\end{aligned}\]</span> More reductions: If <span class="math inline">\(A\)</span> has shape <span class="math inline">\(\{ \mathsf{i}:X, \ldots\}\)</span>, then <span class="math display">\[\begin{aligned}
   \sum_{\mathsf{i}} A &amp;= \sum_{x \in X} A_{\mathsf{i}: x} \\
   \|A\|_{\mathsf{i}} &amp;= \sqrt{\sum_{\mathsf{i}} A^2} \\
@@ -187,46 +185,46 @@ A\odot B &amp; \text{elementwise (Hadamard) product} \\
 <h2 id="sec:tensorvalued">More functions</h2>
 <p>A very common example of a function from vectors to vectors is the softmax: <span class="math display">\[\softmax_{\mathsf{i}} A = \frac{\exp A}{\sum_{\mathsf{i}} \exp A}\]</span></p>
 <p>And it’s also very handy to have a function that renames an index: <span class="math display">\[_{\mathsf{bar}\rightarrow\mathsf{baz}} = 
- \stackrel{\large \mathsf{baz}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{baz}} \\ \begin{bmatrix} 
   3 &amp; 1 &amp; 4 \\
   1 &amp; 5 &amp; 9
- \end{bmatrix}}\]</span></p>
+ \end{bmatrix} \end{array}\]</span></p>
 <p>The vector dot product (inner product) is a function from two vectors to a scalar, which generalizes to named tensors to give the ubiquitous <em>contraction</em> operator: <span class="math display">\[\begin{aligned}
   A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B &amp;= \sum_{\mathsf{i}} A \odot B.\end{aligned}\]</span> This operator can also be used for matrix-vector or matrix-matrix multiplication: <span class="math display">\[\begin{aligned}
 C &amp;= 
- \stackrel{\large \mathsf{baz}}{\mathsf{bar} \begin{bmatrix} 
+\mathsf{bar} \begin{array}[b]{c} \smash{\mathsf{baz}} \\ \begin{bmatrix} 
   1 &amp; -1 \\ 2 &amp; -2 \\ 3 &amp; -3
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{bar}}} C &amp;= 
- \stackrel{\large \mathsf{baz}}{\mathsf{foo} \begin{bmatrix} 
+\mathsf{foo} \begin{array}[b]{c} \smash{\mathsf{baz}} \\ \begin{bmatrix} 
   17 &amp; -17 \\
   53 &amp; -53
- \end{bmatrix}} \end{aligned}\]</span> However, note that (like vector dot-product, but unlike matrix multiplication) <span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> is commutative, but not associative! Specifically, if <span class="math display">\[\begin{aligned}
+ \end{bmatrix} \end{array}\end{aligned}\]</span> However, note that (like vector dot-product, but unlike matrix multiplication) <span class="math inline">\(\mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}}\)</span> is commutative, but not associative! Specifically, if <span class="math display">\[\begin{aligned}
 A &amp;\in \mathbb{R}^{\mathsf{i}:m} \\
 B &amp;\in \mathbb{R}^{\mathsf{i}:m,\mathsf{j}:n} \\
 C &amp;\in \mathbb{R}^{\mathsf{i}:m,\mathsf{j}:n}\end{aligned}\]</span> then <span class="math inline">\((A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} B) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{j}}} C\)</span> and <span class="math inline">\(A \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{i}}} (B \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{j}}} C)\)</span> don’t even have the same shape.</p>
 <p>Finally, we briefly consider functions on matrices, for which you have to give <em>two</em> index names (and the order in general matters). Let <span class="math inline">\(A\)</span> be a named tensor with shape <span class="math inline">\(\{\mathsf{i}:2,\mathsf{j}:2,\mathsf{k}:2\}\)</span>: <span class="math display">\[\begin{aligned}
 A_{\mathsf{i}:1} &amp;= 
- \stackrel{\large \mathsf{k}}{\mathsf{j} \begin{bmatrix} 
+\mathsf{j} \begin{array}[b]{c} \smash{\mathsf{k}} \\ \begin{bmatrix} 
   1 &amp; 2 \\
   3 &amp; 4
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 A_{\mathsf{i}:2} &amp;= 
- \stackrel{\large \mathsf{k}}{\mathsf{j} \begin{bmatrix} 
+\mathsf{j} \begin{array}[b]{c} \smash{\mathsf{k}} \\ \begin{bmatrix} 
   5 &amp; 6 \\
   7 &amp; 8
- \end{bmatrix}} 
+ \end{bmatrix} \end{array}
  \\
 \det_{\mathsf{j},\mathsf{k}} A &amp;= 
- \stackrel{\large \mathsf{i}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 2 \\ 3 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 6 \\ 7 &amp; 8 \end{bmatrix} \end{bmatrix}} 
+ \begin{array}[b]{c} \smash{\mathsf{i}} \\ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 2 \\ 3 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 6 \\ 7 &amp; 8 \end{bmatrix} \end{bmatrix} \end{array}
  \\
 \det_{\mathsf{k},\mathsf{j}} A &amp;= 
- \stackrel{\large \mathsf{i}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 2 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 7 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix}} 
+ \begin{array}[b]{c} \smash{\mathsf{i}} \\ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 2 &amp; 4 \end{bmatrix} &amp; \det \begin{bmatrix} 5 &amp; 7 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix} \end{array}
  \\
 \det_{\mathsf{i},\mathsf{j}} A &amp;= 
- \stackrel{\large \mathsf{k}}{ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 5 &amp; 7 \end{bmatrix} &amp; \det \begin{bmatrix} 2 &amp; 4 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix}} \end{aligned}\]</span> For matrix inverses, there’s no easy way to put a subscript under <span class="math inline">\(\mathord\cdot^{-1}\)</span>, so we recommend writing <span class="math inline">\(\mathop{\text{inv}}\displaylimits_{\mathsf{i},\mathsf{j}}\)</span>.</p>
+ \begin{array}[b]{c} \smash{\mathsf{k}} \\ \begin{bmatrix} \det \begin{bmatrix} 1 &amp; 3 \\ 5 &amp; 7 \end{bmatrix} &amp; \det \begin{bmatrix} 2 &amp; 4 \\ 6 &amp; 8 \end{bmatrix} \end{bmatrix} \end{array}\end{aligned}\]</span> For matrix inverses, there’s no easy way to put a subscript under <span class="math inline">\(\mathord\cdot^{-1}\)</span>, so we recommend writing <span class="math inline">\(\mathop{\text{inv}}\displaylimits_{\mathsf{i},\mathsf{j}}\)</span>.</p>
 <h1 id="sec:examples">Examples</h1>
 <h2 id="attention">Attention</h2>
 <p>Let <span class="math inline">\(d_k\)</span> and <span class="math inline">\(d_v\)</span> be positive integers, and let <span class="math inline">\(n\)</span> and <span class="math inline">\(n&#39;\)</span> be the input and output sequence length. Define a function <span class="math display">\[\begin{aligned}
