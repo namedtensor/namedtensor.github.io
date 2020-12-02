@@ -347,9 +347,9 @@ f &amp;\in \{0, 1\}^{{\mathsf{state}}} \mapsto \mathbb{R}^{{\mathsf{state&#39;}}
 <h2 id="multivariate-normal" class="unnumbered">Multivariate Normal</h2>
 <p>Bilinear terms are more verbose with the named tensor notation. We also need to use explicit names for matrix operations. However this approach does not require using transposes and makes the relationships more explicit.</p>
 <p><span class="math display">\[\begin{aligned}
-X &amp;\in \mathbb{R}^{\mathsf{batch}{b}, \mathsf{d}{k}}  \\
-\mu &amp;\in \mathbb{R}^{{\mathsf{d}{k}}}  \\
-\Sigma &amp; \in   \mathbb{R}^{{\mathsf{d1}{k}, \mathsf{d2}{k}}}  \\
+X &amp;\in \mathbb{R}^{\mathsf{batch}:{b}, \mathsf{d}:{k}}  \\
+\mu &amp;\in \mathbb{R}^{{\mathsf{d}:{k}}}  \\
+\Sigma &amp; \in   \mathbb{R}^{{\mathsf{d1}:{k}, \mathsf{d2}:{k}}}  \\
 {\cal N}(X; \mu, \Sigma) &amp;= \frac{\displaystyle \exp\left(-\frac{1}{2}  \left(\underset{\mathsf{d1, d2}}{\text{inv}}(\Sigma) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{d1}}} [X - \mu]_{\mathsf{d} \rightarrow \mathsf{d1}} \right) \mathbin{\mathop{\thinspace\boldsymbol\cdot\thinspace}\displaylimits_{\mathsf{d2}}} [X - \mu]_{\mathsf{d} \rightarrow \mathsf{d2}} \right) }{\sqrt{(2 \pi)^k \underset{\mathsf{d1, d2}}{\text{det}}(\Sigma)} }\end{aligned}\]</span></p>
 <h2 id="attention-with-causal-masking" class="unnumbered">Attention with Causal Masking</h2>
 <p>When the Transformer is used for generation, it is necessary to have an additional mask to unsure the model does not look at future words. This can be included in the attention definition with clear names.</p>
