@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
   <meta charset="utf-8" />
@@ -145,11 +145,19 @@ A + C &amp;= \ensuremath{\mathsf{height}}\begin{array}[b]{@{}c@{}}\ensuremath{\m
   3+1+4 &amp; 1+5+9 &amp; 2+6+5
 \end{bmatrix}\end{array}.\end{aligned}\]</span> See §<a href="#sec:reductions" data-reference-type="ref" data-reference="sec:reductions">3.1.1</a> for more examples of reductions.</p>
 <p>We can also write multiple names to perform the reduction over multiple axes at once. For example, <span class="math display">\[\sum\limits_{\ensuremath{\mathsf{height,width}}} A = \sum_i \sum_j A_{\ensuremath{\ensuremath{\mathsf{height}}(i)},\ensuremath{\ensuremath{\mathsf{width}}(j)}} = 3+1+4+1+5+9+2+6+5.\]</span></p>
-<p>The vector dot-product is a function from <em>two</em> vectors to a scalar, which generalizes to named tensors to give the ubiquitous <em>contraction</em> operator. You can think of it as elementwise multiplication, then summation over one axis: <span class="math display">\[\begin{aligned}
-%A \ndot{height} B &amp;= \sum_i A_{\nidx{height}{i}} B_{\nidx{height}{i}} = \nmatrix{}{width}{
-%  3\cdot2 + 1\cdot7 + 2\cdot1 &amp; 1\cdot2 + 5\cdot7 + 6\cdot1 &amp; 4\cdot2 + 9\cdot7 + 5\cdot 1
-%} \\
-A \mathbin{\underset{\ensuremath{\mathsf{width}}}{\odot}} C &amp;= \sum_j A_{\ensuremath{\ensuremath{\mathsf{width}}(j)}} B_{\ensuremath{\ensuremath{\mathsf{width}}(j)}} = \ensuremath{\mathsf{height}}\begin{array}[b]{@{}c@{}}\ensuremath{\mathsf{}}\\\begin{bmatrix}
+<p>The vector dot-product is a function from <em>two</em> vectors to a scalar, which generalizes to named tensors to give the ubiquitous <em>contraction</em> operator. You can think of it as elementwise multiplication, then summation over one axis: <span class="math display">
+\[\begin{aligned}
+A \mathbin{\underset{\ensuremath{\mathsf{heigth}}}{\odot}} B &amp;= \sum_i A_{\ensuremath{\ensuremath{\mathsf{heigth}}(i)}} B_{\ensuremath{\ensuremath{\mathsf{heigth}}(i)}}= 
+\ensuremath{\mathsf{}}\begin{array}[b]{@{}c@{}}\ensuremath{\mathsf{width}}\\\begin{bmatrix}
+    3\cdot2 &amp; 1\cdot2   &amp;   4\cdot2  \\
+         +     &amp;   +          &amp;     +          \\
+    1\cdot7 &amp;  5\cdot7   &amp;  9\cdot7  \\
+          +    &amp;   +          &amp;     +          \\
+    2\cdot1 &amp;  6\cdot1  &amp;  5\cdot1
+\end{bmatrix}\end{array}.\end{aligned}\]</span>
+
+<span class="math display">\[\begin{aligned}
+A \mathbin{\underset{\ensuremath{\mathsf{width}}}{\odot}} C &amp;= \sum_j A_{\ensuremath{\ensuremath{\mathsf{width}}(j)}} C_{\ensuremath{\ensuremath{\mathsf{width}}(j)}} = \ensuremath{\mathsf{height}}\begin{array}[b]{@{}c@{}}\ensuremath{\mathsf{}}\\\begin{bmatrix}
   3\cdot 1 + 1\cdot 4 + 4\cdot 1 \\
   1\cdot 1 + 5\cdot 4 + 9\cdot 1 \\
   2\cdot 1 + 6\cdot 4 + 5\cdot 1
